@@ -1,5 +1,9 @@
-# The api/ directory is the Go service deployed to Cloud Run, NOT Vercel
-# Serverless Functions. Without this, Vercel's zero-config detector picks up
-# api/cmd/server/main.go and fails to build because it expects an exported
-# Vercel Go handler.
-api/
+# The root-level api/ directory is the Go service deployed to Cloud Run, NOT
+# Vercel Serverless Functions. Without this, Vercel's zero-config detector
+# picks up api/cmd/server/main.go and fails to build because it expects an
+# exported Vercel Go handler.
+#
+# The leading slash is load-bearing: `api/` (unanchored) would also match
+# `app/api/`, which is Next.js's Route Handler directory — excluding it
+# silently 404s every /api/* route (including Auth.js callbacks).
+/api/
