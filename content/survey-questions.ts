@@ -1,0 +1,126 @@
+export type Question =
+  | { id: string; type: 'short_text'; label: string; maxLength?: number }
+  | { id: string; type: 'long_text'; label: string; maxLength?: number }
+  | { id: string; type: 'number'; label: string; min?: number; max?: number }
+  | { id: string; type: 'scale_1_10'; label: string }
+  | { id: string; type: 'single_choice'; label: string; choices: string[] }
+  | { id: string; type: 'multi_choice'; label: string; choices: string[] }
+
+export const QUESTIONS: Question[] = [
+  { id: 'first_name', type: 'short_text', label: 'First Name', maxLength: 80 },
+  { id: 'last_name', type: 'short_text', label: 'Last Name', maxLength: 80 },
+  { id: 'senior_quote', type: 'long_text', label: 'Senior Quote', maxLength: 300 },
+  { id: 'instagram_handle', type: 'short_text', label: 'Instagram Handle', maxLength: 60 },
+  { id: 'linkedin', type: 'short_text', label: 'LinkedIn', maxLength: 200 },
+  {
+    id: 'pronouns',
+    type: 'single_choice',
+    label: 'Pronouns',
+    choices: ['He/him', 'She/her', 'They/them', 'Other', 'Prefer not to say'],
+  },
+  {
+    id: 'whats_next',
+    type: 'single_choice',
+    label: "What's Next After Graduation?",
+    choices: ['University', 'College', 'Gap Year', 'Working', 'Trades/Apprenticeship', 'Still Figuring it Out'],
+  },
+  { id: 'program_major', type: 'short_text', label: 'Program / Major', maxLength: 120 },
+  {
+    id: 'school_workplace',
+    type: 'short_text',
+    label: 'School / Workplace / Institution / Type of Trade',
+    maxLength: 150,
+  },
+  {
+    id: 'class_defined',
+    type: 'single_choice',
+    label: "What's one thing that defined the Class of '26?",
+    choices: [
+      'Loudest grade',
+      'Most involved',
+      'Funniest class',
+      'Most chaotic',
+      'Most supportive',
+      'Best school spirit',
+      'Most unforgettable',
+    ],
+  },
+  {
+    id: 'miss_most',
+    type: 'single_choice',
+    label: 'What will you miss most?',
+    choices: [
+      'Friends',
+      'Teachers',
+      'Sports/clubs',
+      'The chaos honestly',
+      'Seeing everyone every day',
+      'Lunches/spares',
+      'School events',
+      'Nothing',
+    ],
+  },
+  {
+    id: 'relive_event',
+    type: 'single_choice',
+    label: 'If you could relive ONE high school event, what would it be?',
+    choices: ['Semi', 'C-week', 'Senior sunrise', 'Prom', 'Grad trip', 'Carnival', 'Other'],
+  },
+  {
+    id: 'fav_memory',
+    type: 'single_choice',
+    label: 'What was your favourite senior year memory?',
+    choices: [
+      'Prom',
+      'Semi',
+      'Senior assassin',
+      'Grad trip',
+      'Drive-in movie night',
+      'Spirit weeks',
+      'Cafeteria lunches',
+      'Random hallway moments',
+      'Last day of school',
+      'Sports/clubs/events',
+      'Other',
+    ],
+  },
+  {
+    id: 'excited_for',
+    type: 'single_choice',
+    label: 'What are you MOST excited for after high school?',
+    choices: ['Freedom', 'Meeting new people', 'Moving away', 'Campus life', 'Making money', 'A fresh start', 'No more assignments'],
+  },
+  {
+    id: 'ten_years',
+    type: 'single_choice',
+    label: 'Where do you see yourself in 10 years?',
+    choices: [
+      'Working my dream job',
+      'Traveling a lot',
+      'Living in a big city',
+      'Rich and stress-free hopefully',
+      'Married/kids',
+      'Still trying to figure life out',
+      'Hopefully just happy',
+    ],
+  },
+  { id: 'advice_grade9', type: 'long_text', label: 'Advice to Your Grade 9 Self', maxLength: 500 },
+  { id: 'screen_time', type: 'number', label: 'Daily screen time (hours)', min: 1, max: 14 },
+  { id: 'stress', type: 'scale_1_10', label: 'Average stress level senior year?' },
+  { id: 'study_hours', type: 'number', label: 'Study hours per week', min: 0, max: 40 },
+  { id: 'avg_sleep', type: 'number', label: 'Average sleep per night (hours)', min: 3, max: 12 },
+  { id: 'top_courses', type: 'short_text', label: 'Top 3 favourite courses', maxLength: 200 },
+  { id: 'hardest_course', type: 'short_text', label: 'Most difficult course', maxLength: 100 },
+  {
+    id: 'specialized_program',
+    type: 'single_choice',
+    label: 'Are you in a specialized program?',
+    choices: ['No', 'AP', 'SHSM'],
+  },
+  {
+    id: 'final_grade_bucket',
+    type: 'single_choice',
+    label: 'Final average bucket?',
+    choices: ['<70', '70-79', '80-89', '90-99', '100'],
+  },
+]
