@@ -15,6 +15,46 @@ import (
 
 const testSecret = "test-secret-do-not-use-in-prod"
 
+// TestSignatureFixture pins the canonical-string + HMAC output against a fixed
+// input so the Next.js client (see lib/go-client.test.ts) and this middleware
+// cannot silently disagree on the signing format. If you change either side,
+// regenerate the fixture and update both.
+func TestSignatureFixture(t *testing.T) {
+	cases := []struct {
+		name   string
+		ts     string
+		method string
+		path   string
+		body   string
+		want   string
+	}{
+		{
+			name:   "POST with JSON body",
+			ts:     "1740000000",
+			method: "POST",
+			path:   "/survey",
+			body:   `{"hello":"world"}`,
+			want:   "eed7eb1588bf34c4c5130b34610f815dae7cd4987e78d846170a1e11d0302aab",
+		},
+		{
+			name:   "GET with empty body and query string",
+			ts:     "1740000000",
+			method: "GET",
+			path:   "/directory?limit=24",
+			body:   "",
+			want:   "b241dd37b3b9a0b063665e82214d6ba0f1dc38d16411cb2408509c8873a2ba4c",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := sign(t, testSecret, tc.ts, tc.method, tc.path, tc.body)
+			if got != tc.want {
+				t.Fatalf("signature = %s, want %s", got, tc.want)
+			}
+		})
+	}
+}
+
 func sign(t *testing.T, secret, ts, method, pathWithQuery, body string) string {
 	t.Helper()
 	bodyHash := emptyBodySHA256
