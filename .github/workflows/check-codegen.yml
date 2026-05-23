@@ -1,0 +1,34 @@
+name: check-codegen
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check-codegen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+
+      - name: Install npm deps
+        run: npm ci
+
+      - name: Regenerate Go question schema
+        run: npm run gen:go
+
+      - name: Fail if generated file drifted
+        run: |
+          if ! git diff --exit-code api/internal/questions/questions_gen.go; then
+            echo "::error::api/internal/questions/questions_gen.go is stale."
+            echo "Run \`npm run codegen\` locally and commit the result."
+            exit 1
+          fi
