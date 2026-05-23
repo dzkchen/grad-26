@@ -62,12 +62,16 @@ func New(cfg Config) (*Client, error) {
 func (c *Client) Bucket() string { return c.bucket }
 
 // PresignPut returns a signed URL that the browser can PUT the file to.
-// Only Content-Type is bound into the signature; binding Content-Length too
-// causes R2 to reject browser uploads with 400 because the SDK adds it to the
-// signed-headers list and the fetch-set Content-Length doesn't reliably match.
-// Actual size enforcement happens server-side: POST /survey HEADs the object
-// and rejects anything over 5 MB before committing the DB row.
-// contentLength is accepted for API symmetry but intentionally not signed.
+// Only `host` is bound into the V4 query signature (X-Amz-SignedHeaders=host)
+// — `Content-Type` is set on the request as a header but isn't part of the
+// signed-headers list, and `Content-Length` is intentionally omitted because
+// the SDK signing it produces 400s on browser PUTs. Size enforcement happens
+// server-side: POST /survey HEADs the object and rejects > 5 MB before
+// committing the DB row. contentLength is accepted for API symmetry.
+//
+// The exact signing behavior here is not unit-tested — it's verified by the
+// `cmd/diag-r2` integration tool, which round-trips through real R2. Changes
+// to the s3.Options or this function should be re-verified by running that.
 func (c *Client) PresignPut(ctx context.Context, key, contentType string, contentLength int64, ttl time.Duration) (string, error) {
 	_ = contentLength
 	req, err := c.presigner.PresignPutObject(ctx, &s3.PutObjectInput{
