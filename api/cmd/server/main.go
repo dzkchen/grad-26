@@ -12,6 +12,7 @@ import (
 
 	"github.com/dzkchen/grad-26/api/internal/auth"
 	"github.com/dzkchen/grad-26/api/internal/handlers"
+	"github.com/dzkchen/grad-26/api/internal/r2"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -30,12 +31,24 @@ func main() {
 		port = "8080"
 	}
 
+	r2Client, err := r2.New(r2.Config{
+		Endpoint:        os.Getenv("R2_ENDPOINT"),
+		AccessKeyID:     os.Getenv("R2_ACCESS_KEY_ID"),
+		SecretAccessKey: os.Getenv("R2_SECRET_ACCESS_KEY"),
+		Bucket:          os.Getenv("R2_BUCKET"),
+	})
+	if err != nil {
+		logger.Error("r2 client init failed", "err", err)
+		os.Exit(1)
+	}
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recoverer)
 	r.Use(auth.Verify(secret, map[string]bool{"/health": true}))
 
 	r.Get("/health", handlers.Health)
+	r.Post("/upload/url", handlers.UploadURL(r2Client))
 
 	srv := &http.Server{
 		Addr:              ":" + port,
