@@ -4,7 +4,7 @@ import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { QUESTIONS } from "@/content/survey-questions";
 import { requireUser } from "@/lib/auth";
-import { goClient, GoApiError } from "@/lib/go-client";
+import { goClient, GoApiConnectionError, GoApiError } from "@/lib/go-client";
 import { SurveyFormSchema } from "@/lib/schemas";
 import type { z } from "zod";
 
@@ -79,6 +79,15 @@ export async function submitSurvey(
   } catch (e) {
     if (e instanceof GoApiError && e.code === "conflict") {
       return { error: "You have already submitted." };
+    }
+    if (e instanceof GoApiError) {
+      return { error: e.message };
+    }
+    if (e instanceof GoApiConnectionError) {
+      return {
+        error:
+          "The survey API is unavailable right now. Try again after the API is running.",
+      };
     }
     throw e;
   }

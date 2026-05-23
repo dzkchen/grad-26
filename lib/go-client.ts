@@ -11,6 +11,16 @@ export class GoApiError extends Error {
   }
 }
 
+export class GoApiConnectionError extends Error {
+  readonly url: string;
+
+  constructor(url: string, cause: unknown) {
+    super(`Could not reach Go API at ${url}`, { cause });
+    this.name = "GoApiConnectionError";
+    this.url = url;
+  }
+}
+
 export interface GoClientOpts {
   callerEmail?: string;
 }
@@ -65,12 +75,18 @@ async function request<T>(
   if (bodyString.length > 0) headers["Content-Type"] = "application/json";
   if (opts?.callerEmail) headers["X-Caller-Email"] = opts.callerEmail.toLowerCase();
 
-  const res = await fetch(`${base}${path}`, {
-    method,
-    headers,
-    body: bodyString.length > 0 ? bodyString : undefined,
-    cache: "no-store",
-  });
+  const url = `${base}${path}`;
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method,
+      headers,
+      body: bodyString.length > 0 ? bodyString : undefined,
+      cache: "no-store",
+    });
+  } catch (e) {
+    throw new GoApiConnectionError(url, e);
+  }
 
   if (res.status === 204) return undefined as T;
 

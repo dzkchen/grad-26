@@ -7,13 +7,18 @@ import (
 	"os"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// DatabaseURL returns the Cloud Run DATABASE_URL value, with the repo's direct
-// Supabase env name as a local-development fallback.
+// DatabaseURL returns the explicit Cloud Run value first. For local dev, prefer
+// Supabase's pooler because the direct db.* host can be IPv6-only on networks
+// without an IPv6 route.
 func DatabaseURL() string {
 	if url := os.Getenv("DATABASE_URL"); url != "" {
+		return url
+	}
+	if url := os.Getenv("DATABASE_URL_POOLED"); url != "" {
 		return url
 	}
 	return os.Getenv("DATABASE_URL_DIRECT")
@@ -21,13 +26,14 @@ func DatabaseURL() string {
 
 func NewPool(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
 	if databaseURL == "" {
-		return nil, errors.New("db: DATABASE_URL or DATABASE_URL_DIRECT is required")
+		return nil, errors.New("db: DATABASE_URL, DATABASE_URL_POOLED, or DATABASE_URL_DIRECT is required")
 	}
 
 	cfg, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("db: parse config: %w", err)
 	}
+	cfg.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeExec
 
 	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
