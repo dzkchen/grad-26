@@ -53,6 +53,25 @@ function buildPath(path: string, query?: Record<string, string | number | undefi
   return qs ? `${path}?${qs}` : path;
 }
 
+function buildURL(base: string, path: string): string {
+  const normalizedBase = base.replace(/\/+$/, "");
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${normalizedBase}${normalizedPath}`;
+}
+
+function parseJSON(text: string): unknown {
+  if (text.length === 0) return undefined;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return undefined;
+  }
+}
+
+function compactBody(text: string): string {
+  return text.trim().replace(/\s+/g, " ").slice(0, 240);
+}
+
 async function request<T>(
   method: "GET" | "POST" | "DELETE",
   path: string,
@@ -75,7 +94,7 @@ async function request<T>(
   if (bodyString.length > 0) headers["Content-Type"] = "application/json";
   if (opts?.callerEmail) headers["X-Caller-Email"] = opts.callerEmail.toLowerCase();
 
-  const url = `${base}${path}`;
+  const url = buildURL(base, path);
   let res: Response;
   try {
     res = await fetch(url, {
@@ -91,13 +110,25 @@ async function request<T>(
   if (res.status === 204) return undefined as T;
 
   const text = await res.text();
-  const parsed = text.length > 0 ? (JSON.parse(text) as unknown) : undefined;
+  const parsed = parseJSON(text);
 
   if (!res.ok) {
     const err = (parsed as { error?: { code?: string; message?: string } })?.error;
+    const fallbackMessage = compactBody(text);
     throw new GoApiError(
-      err?.code ?? "unknown",
-      err?.message ?? `Go API ${method} ${path} failed`,
+      err?.code ?? "non_json_response",
+      err?.message ??
+        (fallbackMessage
+          ? `Go API ${method} ${path} returned ${res.status}: ${fallbackMessage}`
+          : `Go API ${method} ${path} returned ${res.status}`),
+      res.status,
+    );
+  }
+
+  if (text.length > 0 && parsed === undefined) {
+    throw new GoApiError(
+      "invalid_response",
+      `Go API ${method} ${path} returned non-JSON response: ${compactBody(text)}`,
       res.status,
     );
   }
