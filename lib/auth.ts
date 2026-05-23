@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 declare module "next-auth" {
   interface Session {
     user: {
+      id: string;
       role: "admin" | "student";
     } & DefaultSession["user"];
   }
@@ -26,6 +27,14 @@ const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
 const ALLOWED_DOMAIN = "pdsb.net";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL_POOLED });
+
+export type AuthUser = {
+  id: string;
+  email: string;
+  name?: string | null;
+  image?: string | null;
+  role: "admin" | "student";
+};
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   adapter: PostgresAdapter(pool),
@@ -53,11 +62,13 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       if (user) {
         const email = (user.email ?? "").toLowerCase();
         token.role = ADMIN_EMAILS.includes(email) ? "admin" : "student";
+        token.sub = user.id;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
+        session.user.id = token.sub ?? "";
         session.user.role = (token.role as "admin" | "student") ?? "student";
       }
       return session;
@@ -69,16 +80,22 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   },
 });
 
-export async function requireUser() {
+export async function requireUser(): Promise<AuthUser> {
   const session = await auth();
-  if (!session?.user) redirect("/auth/sign-in");
-  return session.user;
+  if (!session?.user?.id || !session.user.email) redirect("/auth/sign-in");
+  return {
+    id: session.user.id,
+    email: session.user.email,
+    name: session.user.name,
+    image: session.user.image,
+    role: session.user.role,
+  };
 }
 
 export async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "admin") {
+  const user = await requireUser();
+  if (user.role !== "admin") {
     redirect("/auth/forbidden");
   }
-  return session.user;
+  return user;
 }

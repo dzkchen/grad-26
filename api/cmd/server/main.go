@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/dzkchen/grad-26/api/internal/auth"
+	"github.com/dzkchen/grad-26/api/internal/db"
 	"github.com/dzkchen/grad-26/api/internal/handlers"
 	"github.com/dzkchen/grad-26/api/internal/r2"
 	"github.com/go-chi/chi/v5"
@@ -42,13 +43,22 @@ func main() {
 		os.Exit(1)
 	}
 
+	dbpool, err := db.NewPool(context.Background(), db.DatabaseURL())
+	if err != nil {
+		logger.Error("database init failed", "err", err)
+		os.Exit(1)
+	}
+	defer dbpool.Close()
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recoverer)
 	r.Use(auth.Verify(secret, map[string]bool{"/health": true}))
 
 	r.Get("/health", handlers.Health)
+	r.Get("/me/survey", handlers.MeSurvey(dbpool))
 	r.Post("/upload/url", handlers.UploadURL(r2Client))
+	r.Post("/survey", handlers.CreateSurvey(dbpool, r2Client))
 
 	srv := &http.Server{
 		Addr:              ":" + port,
