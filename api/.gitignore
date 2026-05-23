@@ -1,3 +1,5 @@
 /server
 /diag-r2
+/diag-hmac
 /cmd/diag-r2/
+/cmd/diag-hmac/
