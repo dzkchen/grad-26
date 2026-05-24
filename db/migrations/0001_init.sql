@@ -46,11 +46,7 @@ create table surveys (
   display_name        text not null check (length(display_name) between 1 and 80),
   photo_object_key    text not null,
   instagram_handle    text check (length(instagram_handle) <= 60),
-  tiktok_handle       text check (length(tiktok_handle) <= 60),
-  other_social_url    text check (length(other_social_url) <= 500),
-  post_secondary      text not null check (length(post_secondary) between 1 and 200),
   hide_socials        boolean not null default false,
-  hide_post_secondary boolean not null default false,
   answers             jsonb not null default '{}'::jsonb,
   submitted_at        timestamptz not null default now()
 );

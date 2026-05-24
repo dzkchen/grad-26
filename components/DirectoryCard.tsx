@@ -34,7 +34,7 @@ export function DirectoryCard({ entry }: { entry: DirectoryEntry }) {
       <button
         type="button"
         onClick={open}
-        className="group block w-full overflow-hidden rounded-xl border border-black/10 bg-white/50 text-left transition hover:border-black/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-black dark:border-white/15 dark:bg-white/[.02] dark:hover:border-white/40 dark:focus-visible:ring-white"
+        className="group block w-full overflow-hidden rounded-xl border border-black/10 bg-white/50 text-left transition hover:border-black/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-black dark:border-white/15 dark:bg-white/2 dark:hover:border-white/40 dark:focus-visible:ring-white"
       >
         <div className="relative aspect-square w-full bg-zinc-100 dark:bg-zinc-900">
           <Image
@@ -75,7 +75,7 @@ export function DirectoryCard({ entry }: { entry: DirectoryEntry }) {
                 type="button"
                 onClick={close}
                 aria-label="Close"
-                className="rounded-md border border-black/10 px-2 py-1 text-sm hover:bg-black/[.04] dark:border-white/15 dark:hover:bg-white/[.06]"
+                className="rounded-md border border-black/10 px-2 py-1 text-sm hover:bg-black/4 dark:border-white/15 dark:hover:bg-white/6"
               >
                 Close
               </button>
