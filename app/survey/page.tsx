@@ -8,11 +8,7 @@ type SurveyEntry = {
   display_name: string;
   photo_key: string;
   instagram_handle: string | null;
-  tiktok_handle: string | null;
-  other_social_url: string | null;
-  post_secondary: string;
   hide_socials: boolean;
-  hide_post_secondary: boolean;
   answers: Record<string, unknown>;
   submitted_at: string;
 };
@@ -81,27 +77,13 @@ function AlreadySubmitted({
                 <dd>{submittedAt}</dd>
               </div>
               <div>
-                <dt className="text-zinc-500">Post-secondary</dt>
-                <dd>
-                  {entry.hide_post_secondary
-                    ? "Hidden from directory"
-                    : entry.post_secondary}
-                </dd>
-              </div>
-              <div>
                 <dt className="text-zinc-500">Socials</dt>
                 <dd>
                   {entry.hide_socials
                     ? "Hidden from directory"
-                    : [
-                        entry.instagram_handle
-                          ? `Instagram: ${entry.instagram_handle}`
-                          : null,
-                        entry.tiktok_handle ? `TikTok: ${entry.tiktok_handle}` : null,
-                        entry.other_social_url,
-                      ]
-                        .filter(Boolean)
-                        .join(", ") || "None added"}
+                    : entry.instagram_handle
+                      ? `Instagram: ${entry.instagram_handle}`
+                      : "None added"}
                 </dd>
               </div>
               <div>

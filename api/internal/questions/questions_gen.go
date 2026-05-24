@@ -20,7 +20,6 @@ var Questions = []Question{
 	{Id: "first_name", Type: "short_text", Label: "First Name", MaxLength: intPtr(80)},
 	{Id: "last_name", Type: "short_text", Label: "Last Name", MaxLength: intPtr(80)},
 	{Id: "senior_quote", Type: "long_text", Label: "Senior Quote", MaxLength: intPtr(300)},
-	{Id: "instagram_handle", Type: "short_text", Label: "Instagram Handle", MaxLength: intPtr(60)},
 	{Id: "linkedin", Type: "short_text", Label: "LinkedIn", MaxLength: intPtr(200)},
 	{Id: "pronouns", Type: "single_choice", Label: "Pronouns", Choices: []string{"He/him", "She/her", "They/them", "Other", "Prefer not to say"}},
 	{Id: "whats_next", Type: "single_choice", Label: "What's Next After Graduation?", Choices: []string{"University", "College", "Gap Year", "Working", "Trades/Apprenticeship", "Still Figuring it Out"}},

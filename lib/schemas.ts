@@ -116,17 +116,7 @@ export const SurveyFormSchema = z.object({
     (value) => value == null || !value.startsWith("@"),
     { error: "Instagram handle should not include @." },
   ),
-  tiktok_handle: optionalTrimmed(60, "TikTok handle").refine(
-    (value) => value == null || !value.startsWith("@"),
-    { error: "TikTok handle should not include @." },
-  ),
-  other_social_url: optionalTrimmed(500, "Other social URL").refine(
-    (value) => value == null || z.url().safeParse(value).success,
-    { error: "Other social URL must be a valid URL." },
-  ),
-  post_secondary: trimmedRequired(200, "Post-secondary plans"),
   hide_socials: CheckboxSchema,
-  hide_post_secondary: CheckboxSchema,
   answers: SurveyAnswersSchema,
 });
 

@@ -89,8 +89,8 @@ export function SurveyForm({
         <div>
           <h2 className="text-lg font-semibold tracking-tight">Your profile</h2>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            This is what classmates will see in the directory unless you hide a
-            field.
+            This is what classmates will see in the directory unless you hide
+            your socials.
           </p>
         </div>
 
@@ -126,32 +126,6 @@ export function SurveyForm({
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="post_secondary" className="block text-sm font-medium">
-              Post-secondary plans
-            </label>
-            <input
-              id="post_secondary"
-              name="post_secondary"
-              type="text"
-              required
-              maxLength={200}
-              aria-invalid={
-                firstError(state, "post_secondary") ? "true" : undefined
-              }
-              aria-describedby={
-                firstError(state, "post_secondary")
-                  ? "post-secondary-error"
-                  : undefined
-              }
-              className="w-full rounded-md border border-black/10 bg-transparent px-3 py-2 text-sm outline-none transition focus:border-black/40 dark:border-white/15 dark:focus:border-white/50"
-            />
-            <FieldError
-              id="post-secondary-error"
-              error={firstError(state, "post_secondary")}
-            />
-          </div>
-
-          <div className="space-y-2">
             <label
               htmlFor="instagram_handle"
               className="block text-sm font-medium"
@@ -179,64 +153,9 @@ export function SurveyForm({
               error={firstError(state, "instagram_handle")}
             />
           </div>
-
-          <div className="space-y-2">
-            <label htmlFor="tiktok_handle" className="block text-sm font-medium">
-              TikTok handle
-            </label>
-            <input
-              id="tiktok_handle"
-              name="tiktok_handle"
-              type="text"
-              maxLength={60}
-              placeholder="without @"
-              aria-invalid={
-                firstError(state, "tiktok_handle") ? "true" : undefined
-              }
-              aria-describedby={
-                firstError(state, "tiktok_handle")
-                  ? "tiktok-handle-error"
-                  : undefined
-              }
-              className="w-full rounded-md border border-black/10 bg-transparent px-3 py-2 text-sm outline-none transition focus:border-black/40 dark:border-white/15 dark:focus:border-white/50"
-            />
-            <FieldError
-              id="tiktok-handle-error"
-              error={firstError(state, "tiktok_handle")}
-            />
-          </div>
-
-          <div className="space-y-2 sm:col-span-2">
-            <label
-              htmlFor="other_social_url"
-              className="block text-sm font-medium"
-            >
-              Other social URL
-            </label>
-            <input
-              id="other_social_url"
-              name="other_social_url"
-              type="url"
-              maxLength={500}
-              placeholder="https://..."
-              aria-invalid={
-                firstError(state, "other_social_url") ? "true" : undefined
-              }
-              aria-describedby={
-                firstError(state, "other_social_url")
-                  ? "other-social-url-error"
-                  : undefined
-              }
-              className="w-full rounded-md border border-black/10 bg-transparent px-3 py-2 text-sm outline-none transition focus:border-black/40 dark:border-white/15 dark:focus:border-white/50"
-            />
-            <FieldError
-              id="other-social-url-error"
-              error={firstError(state, "other_social_url")}
-            />
-          </div>
         </div>
 
-        <div className="grid gap-3 text-sm sm:grid-cols-2">
+        <div className="text-sm">
           <label className="flex items-start gap-3 rounded-md border border-black/10 p-3 dark:border-white/15">
             <input
               name="hide_socials"
@@ -244,14 +163,6 @@ export function SurveyForm({
               className="mt-0.5 size-4 rounded accent-black dark:accent-white"
             />
             <span>Hide my social links from the public directory</span>
-          </label>
-          <label className="flex items-start gap-3 rounded-md border border-black/10 p-3 dark:border-white/15">
-            <input
-              name="hide_post_secondary"
-              type="checkbox"
-              className="mt-0.5 size-4 rounded accent-black dark:accent-white"
-            />
-            <span>Hide my post-secondary plans from the public directory</span>
           </label>
         </div>
       </section>

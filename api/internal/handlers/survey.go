@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -28,16 +27,12 @@ type objectHeader interface {
 }
 
 type createSurveyRequest struct {
-	UserID            string         `json:"user_id"`
-	DisplayName       string         `json:"display_name"`
-	PhotoKey          string         `json:"photo_key"`
-	InstagramHandle   *string        `json:"instagram_handle"`
-	TiktokHandle      *string        `json:"tiktok_handle"`
-	OtherSocialURL    *string        `json:"other_social_url"`
-	PostSecondary     string         `json:"post_secondary"`
-	HideSocials       bool           `json:"hide_socials"`
-	HidePostSecondary bool           `json:"hide_post_secondary"`
-	Answers           map[string]any `json:"answers"`
+	UserID          string         `json:"user_id"`
+	DisplayName     string         `json:"display_name"`
+	PhotoKey        string         `json:"photo_key"`
+	InstagramHandle *string        `json:"instagram_handle"`
+	HideSocials     bool           `json:"hide_socials"`
+	Answers         map[string]any `json:"answers"`
 }
 
 type createSurveyResponse struct {
@@ -52,16 +47,12 @@ type meSurveyResponse struct {
 }
 
 type meSurveyEntry struct {
-	DisplayName       string          `json:"display_name"`
-	PhotoKey          string          `json:"photo_key"`
-	InstagramHandle   *string         `json:"instagram_handle"`
-	TiktokHandle      *string         `json:"tiktok_handle"`
-	OtherSocialURL    *string         `json:"other_social_url"`
-	PostSecondary     string          `json:"post_secondary"`
-	HideSocials       bool            `json:"hide_socials"`
-	HidePostSecondary bool            `json:"hide_post_secondary"`
-	Answers           json.RawMessage `json:"answers"`
-	SubmittedAt       time.Time       `json:"submitted_at"`
+	DisplayName     string          `json:"display_name"`
+	PhotoKey        string          `json:"photo_key"`
+	InstagramHandle *string         `json:"instagram_handle"`
+	HideSocials     bool            `json:"hide_socials"`
+	Answers         json.RawMessage `json:"answers"`
+	SubmittedAt     time.Time       `json:"submitted_at"`
 }
 
 var surveyPhotoKeyRE = regexp.MustCompile(`^surveys/([0-9a-f-]+)\.(jpg|jpeg|png|webp)$`)
@@ -136,35 +127,14 @@ func CreateSurvey(store surveyStore, objects objectHeader) http.HandlerFunc {
 			return
 		}
 
-		var resp createSurveyResponse
-		err = store.QueryRow(
+		resp, err := insertSurvey(
 			r.Context(),
-			`insert into surveys (
-				id,
-				user_id,
-				display_name,
-				photo_object_key,
-				instagram_handle,
-				tiktok_handle,
-				other_social_url,
-				post_secondary,
-				hide_socials,
-				hide_post_secondary,
-				answers
-			) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb)
-			returning id::text, submitted_at`,
+			store,
 			surveyID.String(),
 			userID.String(),
-			validated.displayName,
-			validated.photoKey,
-			nullableString(validated.instagramHandle),
-			nullableString(validated.tiktokHandle),
-			nullableString(validated.otherSocialURL),
-			validated.postSecondary,
-			validated.hideSocials,
-			validated.hidePostSecondary,
+			validated,
 			string(answersJSON),
-		).Scan(&resp.ID, &resp.SubmittedAt)
+		)
 		if err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == "23505" {
@@ -177,6 +147,70 @@ func CreateSurvey(store surveyStore, objects objectHeader) http.HandlerFunc {
 
 		writeJSON(w, http.StatusCreated, resp)
 	}
+}
+
+func insertSurvey(ctx context.Context, store surveyStore, surveyID string, userID string, req validatedSurveyRequest, answersJSON string) (createSurveyResponse, error) {
+	var resp createSurveyResponse
+	err := store.QueryRow(
+		ctx,
+		`insert into surveys (
+			id,
+			user_id,
+			display_name,
+			photo_object_key,
+			instagram_handle,
+			hide_socials,
+			answers
+		) values ($1, $2, $3, $4, $5, $6, $7::jsonb)
+		returning id::text, submitted_at`,
+		surveyID,
+		userID,
+		req.displayName,
+		req.photoKey,
+		nullableString(req.instagramHandle),
+		req.hideSocials,
+		answersJSON,
+	).Scan(&resp.ID, &resp.SubmittedAt)
+	if err == nil {
+		return resp, nil
+	}
+
+	var pgErr *pgconn.PgError
+	if !errors.As(err, &pgErr) || pgErr.Code != "23502" || pgErr.ColumnName != "post_secondary" {
+		return createSurveyResponse{}, err
+	}
+
+	// Compatibility while production DBs apply 0002_simplify_survey_profile.sql.
+	// Old schemas still require post_secondary even though the field has been
+	// removed from the survey UI and API payload.
+	err = store.QueryRow(
+		ctx,
+		`insert into surveys (
+			id,
+			user_id,
+			display_name,
+			photo_object_key,
+			instagram_handle,
+			post_secondary,
+			hide_socials,
+			hide_post_secondary,
+			answers
+		) values ($1, $2, $3, $4, $5, $6, $7, true, $8::jsonb)
+		returning id::text, submitted_at`,
+		surveyID,
+		userID,
+		req.displayName,
+		req.photoKey,
+		nullableString(req.instagramHandle),
+		"Not provided",
+		req.hideSocials,
+		answersJSON,
+	).Scan(&resp.ID, &resp.SubmittedAt)
+	if err != nil {
+		return createSurveyResponse{}, err
+	}
+
+	return resp, nil
 }
 
 func MeSurvey(store surveyStore) http.HandlerFunc {
@@ -222,16 +256,12 @@ func MeSurvey(store surveyStore) http.HandlerFunc {
 }
 
 type validatedSurveyRequest struct {
-	userID            string
-	displayName       string
-	photoKey          string
-	instagramHandle   *string
-	tiktokHandle      *string
-	otherSocialURL    *string
-	postSecondary     string
-	hideSocials       bool
-	hidePostSecondary bool
-	answers           map[string]any
+	userID          string
+	displayName     string
+	photoKey        string
+	instagramHandle *string
+	hideSocials     bool
+	answers         map[string]any
 }
 
 func validateCreateSurveyRequest(w http.ResponseWriter, req createSurveyRequest) (validatedSurveyRequest, bool) {
@@ -241,21 +271,7 @@ func validateCreateSurveyRequest(w http.ResponseWriter, req createSurveyRequest)
 		return validatedSurveyRequest{}, false
 	}
 
-	postSecondary := strings.TrimSpace(req.PostSecondary)
-	if runeLen(postSecondary) < 1 || runeLen(postSecondary) > 200 {
-		writeError(w, http.StatusBadRequest, "invalid_request", "post_secondary must be 1..200 characters")
-		return validatedSurveyRequest{}, false
-	}
-
 	instagram, ok := normalizeHandle(w, req.InstagramHandle, "instagram_handle")
-	if !ok {
-		return validatedSurveyRequest{}, false
-	}
-	tiktok, ok := normalizeHandle(w, req.TiktokHandle, "tiktok_handle")
-	if !ok {
-		return validatedSurveyRequest{}, false
-	}
-	otherURL, ok := normalizeOptionalURL(w, req.OtherSocialURL)
 	if !ok {
 		return validatedSurveyRequest{}, false
 	}
@@ -266,16 +282,12 @@ func validateCreateSurveyRequest(w http.ResponseWriter, req createSurveyRequest)
 	}
 
 	return validatedSurveyRequest{
-		userID:            strings.TrimSpace(req.UserID),
-		displayName:       displayName,
-		photoKey:          strings.TrimSpace(req.PhotoKey),
-		instagramHandle:   instagram,
-		tiktokHandle:      tiktok,
-		otherSocialURL:    otherURL,
-		postSecondary:     postSecondary,
-		hideSocials:       req.HideSocials,
-		hidePostSecondary: req.HidePostSecondary,
-		answers:           req.Answers,
+		userID:          strings.TrimSpace(req.UserID),
+		displayName:     displayName,
+		photoKey:        strings.TrimSpace(req.PhotoKey),
+		instagramHandle: instagram,
+		hideSocials:     req.HideSocials,
+		answers:         req.Answers,
 	}, true
 }
 
@@ -298,26 +310,6 @@ func normalizeHandle(w http.ResponseWriter, value *string, field string) (*strin
 	return &trimmed, true
 }
 
-func normalizeOptionalURL(w http.ResponseWriter, value *string) (*string, bool) {
-	if value == nil {
-		return nil, true
-	}
-	trimmed := strings.TrimSpace(*value)
-	if trimmed == "" {
-		return nil, true
-	}
-	if runeLen(trimmed) > 500 {
-		writeError(w, http.StatusBadRequest, "invalid_request", "other_social_url must be 500 characters or fewer")
-		return nil, false
-	}
-	parsed, err := url.Parse(trimmed)
-	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
-		writeError(w, http.StatusBadRequest, "invalid_request", "other_social_url must be a valid URL")
-		return nil, false
-	}
-	return &trimmed, true
-}
-
 func userEmailMatches(ctx context.Context, store surveyStore, userID string, callerEmail string) (bool, error) {
 	var email string
 	err := store.QueryRow(ctx, `select email from users where id=$1`, userID).Scan(&email)
@@ -332,14 +324,11 @@ func userEmailMatches(ctx context.Context, store surveyStore, userID string, cal
 
 func surveyByUserID(ctx context.Context, store surveyStore, userID string) (*meSurveyEntry, string, error) {
 	var (
-		id                string
-		instagram         pgtype.Text
-		tiktok            pgtype.Text
-		otherURL          pgtype.Text
-		answers           []byte
-		entry             meSurveyEntry
-		hideSocials       bool
-		hidePostSecondary bool
+		id          string
+		instagram   pgtype.Text
+		answers     []byte
+		entry       meSurveyEntry
+		hideSocials bool
 	)
 
 	err := store.QueryRow(
@@ -349,11 +338,7 @@ func surveyByUserID(ctx context.Context, store surveyStore, userID string) (*meS
 			display_name,
 			photo_object_key,
 			instagram_handle,
-			tiktok_handle,
-			other_social_url,
-			post_secondary,
 			hide_socials,
-			hide_post_secondary,
 			answers,
 			submitted_at
 		from surveys
@@ -364,11 +349,7 @@ func surveyByUserID(ctx context.Context, store surveyStore, userID string) (*meS
 		&entry.DisplayName,
 		&entry.PhotoKey,
 		&instagram,
-		&tiktok,
-		&otherURL,
-		&entry.PostSecondary,
 		&hideSocials,
-		&hidePostSecondary,
 		&answers,
 		&entry.SubmittedAt,
 	)
@@ -377,10 +358,7 @@ func surveyByUserID(ctx context.Context, store surveyStore, userID string) (*meS
 	}
 
 	entry.InstagramHandle = textPtr(instagram)
-	entry.TiktokHandle = textPtr(tiktok)
-	entry.OtherSocialURL = textPtr(otherURL)
 	entry.HideSocials = hideSocials
-	entry.HidePostSecondary = hidePostSecondary
 	if len(answers) == 0 {
 		answers = []byte(`{}`)
 	}
