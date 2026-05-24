@@ -55,8 +55,14 @@ func main() {
 	r.Use(middleware.Recoverer)
 	r.Use(auth.Verify(secret, map[string]bool{"/health": true}))
 
+	publicHost := os.Getenv("R2_PUBLIC_HOSTNAME")
+	if publicHost == "" {
+		logger.Warn("R2_PUBLIC_HOSTNAME is empty; /directory will return raw object keys instead of public URLs")
+	}
+
 	r.Get("/health", handlers.Health)
 	r.Get("/me/survey", handlers.MeSurvey(dbpool))
+	r.Get("/directory", handlers.Directory(dbpool, publicHost))
 	r.Post("/upload/url", handlers.UploadURL(r2Client))
 	r.Post("/survey", handlers.CreateSurvey(dbpool, r2Client))
 
