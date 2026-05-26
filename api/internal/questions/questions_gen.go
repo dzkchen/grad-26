@@ -17,29 +17,26 @@ type Question struct {
 func intPtr(i int) *int { return &i }
 
 var Questions = []Question{
-	{Id: "first_name", Type: "short_text", Label: "First Name", MaxLength: intPtr(80)},
-	{Id: "last_name", Type: "short_text", Label: "Last Name", MaxLength: intPtr(80)},
 	{Id: "senior_quote", Type: "long_text", Label: "Senior Quote", MaxLength: intPtr(300)},
 	{Id: "linkedin", Type: "short_text", Label: "LinkedIn", MaxLength: intPtr(200)},
 	{Id: "pronouns", Type: "single_choice", Label: "Pronouns", Choices: []string{"He/him", "She/her", "They/them", "Other", "Prefer not to say"}},
 	{Id: "whats_next", Type: "single_choice", Label: "What's Next After Graduation?", Choices: []string{"University", "College", "Gap Year", "Working", "Trades/Apprenticeship", "Still Figuring it Out"}},
 	{Id: "program_major", Type: "short_text", Label: "Program / Major", MaxLength: intPtr(120)},
-	{Id: "school_workplace", Type: "short_text", Label: "School / Workplace / Institution / Type of Trade", MaxLength: intPtr(150)},
-	{Id: "class_defined", Type: "single_choice", Label: "What's one thing that defined the Class of '26?", Choices: []string{"Loudest grade", "Most involved", "Funniest class", "Most chaotic", "Most supportive", "Best school spirit", "Most unforgettable"}},
-	{Id: "miss_most", Type: "single_choice", Label: "What will you miss most?", Choices: []string{"Friends", "Teachers", "Sports/clubs", "The chaos honestly", "Seeing everyone every day", "Lunches/spares", "School events", "Nothing"}},
-	{Id: "relive_event", Type: "single_choice", Label: "If you could relive ONE high school event, what would it be?", Choices: []string{"Semi", "C-week", "Senior sunrise", "Prom", "Grad trip", "Carnival", "Other"}},
-	{Id: "fav_memory", Type: "single_choice", Label: "What was your favourite senior year memory?", Choices: []string{"Prom", "Semi", "Senior assassin", "Grad trip", "Drive-in movie night", "Spirit weeks", "Cafeteria lunches", "Random hallway moments", "Last day of school", "Sports/clubs/events", "Other"}},
+	{Id: "school_workplace", Type: "short_text", Label: "Where you're going / working", MaxLength: intPtr(150)},
 	{Id: "excited_for", Type: "single_choice", Label: "What are you MOST excited for after high school?", Choices: []string{"Freedom", "Meeting new people", "Moving away", "Campus life", "Making money", "A fresh start", "No more assignments"}},
 	{Id: "ten_years", Type: "single_choice", Label: "Where do you see yourself in 10 years?", Choices: []string{"Working my dream job", "Traveling a lot", "Living in a big city", "Rich and stress-free hopefully", "Married/kids", "Still trying to figure life out", "Hopefully just happy"}},
-	{Id: "advice_grade9", Type: "long_text", Label: "Advice to Your Grade 9 Self", MaxLength: intPtr(500)},
+	{Id: "specialized_program", Type: "single_choice", Label: "Are you in a specialized program?", Choices: []string{"No", "AP", "SHSM"}},
+	{Id: "top_courses", Type: "short_text", Label: "Favourite course", MaxLength: intPtr(200)},
+	{Id: "hardest_course", Type: "short_text", Label: "Most difficult course", MaxLength: intPtr(100)},
+	{Id: "final_grade_bucket", Type: "single_choice", Label: "Sem 2 Midterm Average", Choices: []string{"<70", "70-79", "80-89", "90-99", "100"}},
 	{Id: "screen_time", Type: "number", Label: "Daily screen time (hours)", Min: intPtr(1), Max: intPtr(14)},
 	{Id: "stress", Type: "scale_1_10", Label: "Average stress level senior year?"},
 	{Id: "study_hours", Type: "number", Label: "Study hours per week", Min: intPtr(0), Max: intPtr(40)},
 	{Id: "avg_sleep", Type: "number", Label: "Average sleep per night (hours)", Min: intPtr(3), Max: intPtr(12)},
-	{Id: "top_courses", Type: "short_text", Label: "Top 3 favourite courses", MaxLength: intPtr(200)},
-	{Id: "hardest_course", Type: "short_text", Label: "Most difficult course", MaxLength: intPtr(100)},
-	{Id: "specialized_program", Type: "single_choice", Label: "Are you in a specialized program?", Choices: []string{"No", "AP", "SHSM"}},
-	{Id: "final_grade_bucket", Type: "single_choice", Label: "Final average bucket?", Choices: []string{"<70", "70-79", "80-89", "90-99", "100"}},
+	{Id: "class_defined", Type: "single_choice", Label: "What's one thing that defined the Class of '26?", Choices: []string{"Loudest grade", "Most involved", "Funniest class", "Most chaotic", "Most supportive", "Best school spirit", "Most unforgettable"}},
+	{Id: "miss_most", Type: "single_choice", Label: "What will you miss most?", Choices: []string{"Friends", "Teachers", "Sports/clubs", "The chaos honestly", "Seeing everyone every day", "Lunches/spares", "School events", "Nothing"}},
+	{Id: "relive_event", Type: "single_choice", Label: "If you could relive ONE high school event, what would it be?", Choices: []string{"Semi", "C-week", "Senior sunrise", "Prom", "Grad trip", "Carnival", "Other"}},
+	{Id: "advice_grade9", Type: "long_text", Label: "Advice to Your Grade 9 Self", MaxLength: intPtr(500)},
 }
 
 var QuestionsByID = func() map[string]Question {

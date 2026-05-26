@@ -12,7 +12,7 @@ func TestValidateAnswers_Pass(t *testing.T) {
 		{"valid scale boundary high", map[string]any{"stress": 10}},
 		{"valid single_choice", map[string]any{"final_grade_bucket": "80-89"}},
 		{"valid number in range", map[string]any{"study_hours": 12}},
-		{"valid short_text under max", map[string]any{"first_name": "Alex"}},
+		{"valid short_text under max", map[string]any{"program_major": "Engineering"}},
 		{"empty answers", map[string]any{}},
 	}
 	for _, tc := range cases {
@@ -35,9 +35,9 @@ func TestValidateAnswers_Fail(t *testing.T) {
 		{"choice not in list", map[string]any{"final_grade_bucket": "F"}},
 		{"number below min", map[string]any{"avg_sleep": 2}},
 		{"number above max", map[string]any{"avg_sleep": 25}},
-		{"wrong type for text", map[string]any{"first_name": 42}},
+		{"wrong type for text", map[string]any{"program_major": 42}},
 		{"text exceeds maxLength", map[string]any{
-			"first_name": string(make([]byte, 200)),
+			"program_major": string(make([]byte, 200)),
 		}},
 	}
 	for _, tc := range cases {
