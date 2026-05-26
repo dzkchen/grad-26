@@ -104,7 +104,34 @@ for (const question of QUESTIONS) {
   AnswerShape[question.id] = questionSchema(question).optional();
 }
 
-export const SurveyAnswersSchema = z.object(AnswerShape).strict();
+const UNIVERSITY_CHOICE = "University";
+const COLLEGE_CHOICE = "College";
+
+export const SurveyAnswersSchema = z
+  .object(AnswerShape)
+  .strict()
+  .superRefine((answers, ctx) => {
+    if (
+      answers.whats_next !== UNIVERSITY_CHOICE &&
+      answers.whats_next !== COLLEGE_CHOICE
+    ) {
+      return;
+    }
+
+    const schoolWorkplace = answers.school_workplace;
+    if (
+      typeof schoolWorkplace === "string" &&
+      schoolWorkplace.trim().length > 0
+    ) {
+      return;
+    }
+
+    ctx.addIssue({
+      code: "custom",
+      path: ["school_workplace"],
+      message: "Where you're going / working is required.",
+    });
+  });
 
 export const SurveyFormSchema = z.object({
   display_name: trimmedRequired(80, "Display name"),

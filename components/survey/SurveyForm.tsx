@@ -1,8 +1,10 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, type ChangeEvent } from "react";
 import { useFormStatus } from "react-dom";
+import colleges from "@/content/colleges.json";
 import { QUESTIONS, type Question } from "@/content/survey-questions";
+import universities from "@/content/universities.json";
 import { submitSurvey, type SubmitSurveyState } from "@/app/survey/actions";
 import { LongText } from "@/components/survey/LongText";
 import { MultiChoice } from "@/components/survey/MultiChoice";
@@ -39,14 +41,83 @@ function firstError(state: SubmitSurveyState, field: string) {
   return state?.fieldErrors?.[field]?.[0];
 }
 
+const UNIVERSITY_CHOICE = "University";
+const COLLEGE_CHOICE = "College";
+
+function SchoolWorkplaceInput({
+  question,
+  name,
+  error,
+  whatsNext,
+}: {
+  question: Extract<Question, { type: "short_text" }>;
+  name: string;
+  error?: string;
+  whatsNext: string;
+}) {
+  const id = `answer-${question.id}`;
+  const list =
+    whatsNext === UNIVERSITY_CHOICE
+      ? { id: "universities-list", values: universities }
+      : whatsNext === COLLEGE_CHOICE
+        ? { id: "colleges-list", values: colleges }
+        : null;
+
+  if (!list) {
+    return <ShortText question={question} name={name} error={error} />;
+  }
+
+  return (
+    <div className="space-y-2">
+      <label htmlFor={id} className="block text-sm font-medium">
+        {question.label}
+      </label>
+      <input
+        id={id}
+        name={name}
+        type="text"
+        list={list.id}
+        maxLength={question.maxLength}
+        required
+        aria-invalid={error ? "true" : undefined}
+        aria-describedby={error ? `${id}-error` : undefined}
+        className="w-full rounded-md border border-black/10 bg-transparent px-3 py-2 text-sm outline-none transition focus:border-black/40 dark:border-white/15 dark:focus:border-white/50"
+      />
+      <datalist id={list.id}>
+        {list.values.map((value) => (
+          <option key={value} value={value} />
+        ))}
+      </datalist>
+      {error ? (
+        <p id={`${id}-error`} className="text-sm text-red-600">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function QuestionInput({
   question,
   error,
+  whatsNext,
 }: {
   question: Question;
   error?: string;
+  whatsNext: string;
 }) {
   const name = `answers.${question.id}`;
+
+  if (question.id === "school_workplace" && question.type === "short_text") {
+    return (
+      <SchoolWorkplaceInput
+        question={question}
+        name={name}
+        error={error}
+        whatsNext={whatsNext}
+      />
+    );
+  }
 
   switch (question.type) {
     case "short_text":
@@ -73,9 +144,20 @@ export function SurveyForm({
 }) {
   const [state, formAction] = useActionState(submitSurvey, null);
   const [photoKey, setPhotoKey] = useState("");
+  const [whatsNext, setWhatsNext] = useState("");
+
+  function handleChange(event: ChangeEvent<HTMLFormElement>) {
+    const target = event.target;
+    if (
+      target instanceof HTMLInputElement &&
+      target.name === "answers.whats_next"
+    ) {
+      setWhatsNext(target.value);
+    }
+  }
 
   return (
-    <form action={formAction} className="space-y-8">
+    <form action={formAction} onChange={handleChange} className="space-y-8">
       {state?.error ? (
         <div
           role="alert"
@@ -180,6 +262,7 @@ export function SurveyForm({
               <QuestionInput
                 question={question}
                 error={firstError(state, `answers.${question.id}`)}
+                whatsNext={whatsNext}
               />
             </div>
           ))}
