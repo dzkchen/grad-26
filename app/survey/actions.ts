@@ -33,6 +33,7 @@ function formDataToSurveyInput(formData: FormData) {
     display_name: formData.get("display_name"),
     photo_key: formData.get("photo_key"),
     instagram_handle: formData.get("instagram_handle"),
+    linkedin: formData.get("linkedin") ?? undefined,
     answers,
   };
 }
@@ -67,7 +68,11 @@ export async function submitSurvey(
       "/survey",
       {
         user_id: user.id,
-        ...parsed.data,
+        display_name: parsed.data.display_name,
+        photo_key: parsed.data.photo_key,
+        instagram_handle: parsed.data.instagram_handle,
+        linkedin: parsed.data.linkedin ?? "",
+        answers: parsed.data.answers,
       },
       { callerEmail: user.email },
     );

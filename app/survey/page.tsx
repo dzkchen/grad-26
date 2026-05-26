@@ -8,6 +8,7 @@ type SurveyEntry = {
   display_name: string;
   photo_key: string;
   instagram_handle: string | null;
+  linkedin: string | null;
   answers: Record<string, unknown>;
   submitted_at: string;
 };
@@ -78,9 +79,13 @@ function AlreadySubmitted({
               <div>
                 <dt className="text-zinc-500">Socials</dt>
                 <dd>
-                  {entry.instagram_handle
-                    ? `Instagram: ${entry.instagram_handle}`
-                    : "None added"}
+                  {[
+                    entry.instagram_handle &&
+                      `Instagram: ${entry.instagram_handle}`,
+                    entry.linkedin && `LinkedIn: ${entry.linkedin}`,
+                  ]
+                    .filter(Boolean)
+                    .join(", ") || "None added"}
                 </dd>
               </div>
               <div>
@@ -177,8 +182,7 @@ async function SurveyContent() {
           Submit your Class of 2026 profile
         </h1>
         <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-          Upload your photo, choose what stays private, and answer as many
-          survey questions as you want.
+          Upload your photo and answer as many survey questions as you want.
         </p>
       </div>
       <SurveyForm

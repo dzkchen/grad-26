@@ -1,6 +1,5 @@
 [
   { "id": "senior_quote", "type": "long_text", "label": "Senior Quote", "maxLength": 300 },
-  { "id": "linkedin", "type": "short_text", "label": "LinkedIn", "maxLength": 200 },
   {
     "id": "pronouns",
     "type": "single_choice",

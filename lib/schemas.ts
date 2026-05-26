@@ -138,6 +138,11 @@ export const SurveyFormSchema = z.object({
     (value) => value == null || !value.startsWith("@"),
     { error: "Instagram handle should not include @." },
   ),
+  linkedin: z
+    .string({ error: "LinkedIn handle must be text." })
+    .trim()
+    .max(200, { error: "LinkedIn handle must be 200 characters or fewer." })
+    .optional(),
   answers: SurveyAnswersSchema,
 });
 

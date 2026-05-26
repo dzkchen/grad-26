@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -36,6 +37,7 @@ type directoryEntry struct {
 
 type directorySocial struct {
 	Instagram string `json:"instagram,omitempty"`
+	Linkedin  string `json:"linkedin,omitempty"`
 }
 
 // directoryDetails carries the answer subset shown when a card is expanded.
@@ -140,7 +142,7 @@ func queryDirectory(ctx context.Context, store directoryStore, publicHost string
 	if hasCursor {
 		rows, err = store.Query(
 			ctx,
-			`select id::text, display_name, photo_object_key, instagram_handle, answers, submitted_at
+			`select id::text, display_name, photo_object_key, instagram_handle, linkedin, answers, submitted_at
 			from surveys
 			where (submitted_at, id) < ($1, $2)
 			order by submitted_at desc, id desc
@@ -150,7 +152,7 @@ func queryDirectory(ctx context.Context, store directoryStore, publicHost string
 	} else {
 		rows, err = store.Query(
 			ctx,
-			`select id::text, display_name, photo_object_key, instagram_handle, answers, submitted_at
+			`select id::text, display_name, photo_object_key, instagram_handle, linkedin, answers, submitted_at
 			from surveys
 			order by submitted_at desc, id desc
 			limit $1`,
@@ -167,6 +169,7 @@ func queryDirectory(ctx context.Context, store directoryStore, publicHost string
 		displayName string
 		photoKey    string
 		instagram   pgtype.Text
+		linkedin    sql.NullString
 		answers     []byte
 		submittedAt time.Time
 	}
@@ -174,7 +177,7 @@ func queryDirectory(ctx context.Context, store directoryStore, publicHost string
 	collected := make([]rawRow, 0, fetch)
 	for rows.Next() {
 		var rr rawRow
-		if err := rows.Scan(&rr.id, &rr.displayName, &rr.photoKey, &rr.instagram, &rr.answers, &rr.submittedAt); err != nil {
+		if err := rows.Scan(&rr.id, &rr.displayName, &rr.photoKey, &rr.instagram, &rr.linkedin, &rr.answers, &rr.submittedAt); err != nil {
 			return nil, nil, err
 		}
 		collected = append(collected, rr)
@@ -199,8 +202,15 @@ func queryDirectory(ctx context.Context, store directoryStore, publicHost string
 			PhotoURL:    photoURL(publicHost, rr.photoKey),
 			Details:     extractDetails(rr.answers),
 		}
+		socials := directorySocial{}
 		if rr.instagram.Valid && rr.instagram.String != "" {
-			entry.Socials = &directorySocial{Instagram: rr.instagram.String}
+			socials.Instagram = rr.instagram.String
+		}
+		if rr.linkedin.Valid && rr.linkedin.String != "" {
+			socials.Linkedin = rr.linkedin.String
+		}
+		if socials.Instagram != "" || socials.Linkedin != "" {
+			entry.Socials = &socials
 		}
 		entries = append(entries, entry)
 	}

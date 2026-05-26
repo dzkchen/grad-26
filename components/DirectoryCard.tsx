@@ -4,6 +4,11 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import type { DirectoryEntry } from "@/lib/data/directory";
 
+function linkedinHref(value: string) {
+  if (/^https?:\/\//i.test(value)) return value;
+  return `https://www.linkedin.com/in/${encodeURIComponent(value)}`;
+}
+
 export function DirectoryCard({ entry }: { entry: DirectoryEntry }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -25,9 +30,15 @@ export function DirectoryCard({ entry }: { entry: DirectoryEntry }) {
   }, []);
 
   const instagram = entry.socials?.instagram;
+  const linkedin = entry.socials?.linkedin;
   const d = entry.details ?? {};
   const hasDetails =
-    d.whats_next || d.school_workplace || d.program_major || d.senior_quote || instagram;
+    d.whats_next ||
+    d.school_workplace ||
+    d.program_major ||
+    d.senior_quote ||
+    instagram ||
+    linkedin;
 
   return (
     <>
@@ -112,6 +123,21 @@ export function DirectoryCard({ entry }: { entry: DirectoryEntry }) {
                         className="underline hover:no-underline"
                       >
                         @{instagram}
+                      </a>
+                    </dd>
+                  </div>
+                ) : null}
+                {linkedin ? (
+                  <div>
+                    <dt className="text-zinc-500">LinkedIn</dt>
+                    <dd>
+                      <a
+                        href={linkedinHref(linkedin)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline hover:no-underline"
+                      >
+                        {linkedin}
                       </a>
                     </dd>
                   </div>

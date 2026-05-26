@@ -18,7 +18,6 @@ func intPtr(i int) *int { return &i }
 
 var Questions = []Question{
 	{Id: "senior_quote", Type: "long_text", Label: "Senior Quote", MaxLength: intPtr(300)},
-	{Id: "linkedin", Type: "short_text", Label: "LinkedIn", MaxLength: intPtr(200)},
 	{Id: "pronouns", Type: "single_choice", Label: "Pronouns", Choices: []string{"He/him", "She/her", "They/them", "Other", "Prefer not to say"}},
 	{Id: "whats_next", Type: "single_choice", Label: "What's Next After Graduation?", Choices: []string{"University", "College", "Gap Year", "Working", "Trades/Apprenticeship", "Still Figuring it Out"}},
 	{Id: "program_major", Type: "short_text", Label: "Program / Major", MaxLength: intPtr(120)},

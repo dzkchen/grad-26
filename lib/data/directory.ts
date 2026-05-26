@@ -7,7 +7,7 @@ export type DirectoryEntry = {
   id: string;
   display_name: string;
   photo_url: string;
-  socials: { instagram?: string } | null;
+  socials: { instagram?: string; linkedin?: string } | null;
   details: {
     whats_next?: string;
     program_major?: string;

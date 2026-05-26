@@ -31,6 +31,7 @@ type createSurveyRequest struct {
 	DisplayName     string         `json:"display_name"`
 	PhotoKey        string         `json:"photo_key"`
 	InstagramHandle *string        `json:"instagram_handle"`
+	Linkedin        string         `json:"linkedin"`
 	Answers         map[string]any `json:"answers"`
 }
 
@@ -49,6 +50,7 @@ type meSurveyEntry struct {
 	DisplayName     string          `json:"display_name"`
 	PhotoKey        string          `json:"photo_key"`
 	InstagramHandle *string         `json:"instagram_handle"`
+	Linkedin        *string         `json:"linkedin"`
 	Answers         json.RawMessage `json:"answers"`
 	SubmittedAt     time.Time       `json:"submitted_at"`
 }
@@ -157,47 +159,16 @@ func insertSurvey(ctx context.Context, store surveyStore, surveyID string, userI
 			display_name,
 			photo_object_key,
 			instagram_handle,
+			linkedin,
 			answers
-		) values ($1, $2, $3, $4, $5, $6::jsonb)
+		) values ($1, $2, $3, $4, $5, $6, $7::jsonb)
 		returning id::text, submitted_at`,
 		surveyID,
 		userID,
 		req.displayName,
 		req.photoKey,
 		nullableString(req.instagramHandle),
-		answersJSON,
-	).Scan(&resp.ID, &resp.SubmittedAt)
-	if err == nil {
-		return resp, nil
-	}
-
-	var pgErr *pgconn.PgError
-	if !errors.As(err, &pgErr) || pgErr.Code != "23502" || pgErr.ColumnName != "post_secondary" {
-		return createSurveyResponse{}, err
-	}
-
-	// Compatibility while production DBs apply 0002_simplify_survey_profile.sql.
-	// Old schemas still require post_secondary even though the field has been
-	// removed from the survey UI and API payload.
-	err = store.QueryRow(
-		ctx,
-		`insert into surveys (
-			id,
-			user_id,
-			display_name,
-			photo_object_key,
-			instagram_handle,
-			post_secondary,
-			hide_post_secondary,
-			answers
-		) values ($1, $2, $3, $4, $5, $6, true, $7::jsonb)
-		returning id::text, submitted_at`,
-		surveyID,
-		userID,
-		req.displayName,
-		req.photoKey,
-		nullableString(req.instagramHandle),
-		"Not provided",
+		nullableString(req.linkedin),
 		answersJSON,
 	).Scan(&resp.ID, &resp.SubmittedAt)
 	if err != nil {
@@ -254,6 +225,7 @@ type validatedSurveyRequest struct {
 	displayName     string
 	photoKey        string
 	instagramHandle *string
+	linkedin        *string
 	answers         map[string]any
 }
 
@@ -269,6 +241,12 @@ func validateCreateSurveyRequest(w http.ResponseWriter, req createSurveyRequest)
 		return validatedSurveyRequest{}, false
 	}
 
+	linkedin := strings.TrimSpace(req.Linkedin)
+	if runeLen(linkedin) > 200 {
+		writeError(w, http.StatusBadRequest, "invalid_request", "linkedin must be 200 characters or fewer")
+		return validatedSurveyRequest{}, false
+	}
+
 	if req.Answers == nil {
 		writeError(w, http.StatusBadRequest, "invalid_request", "answers is required")
 		return validatedSurveyRequest{}, false
@@ -279,6 +257,7 @@ func validateCreateSurveyRequest(w http.ResponseWriter, req createSurveyRequest)
 		displayName:     displayName,
 		photoKey:        strings.TrimSpace(req.PhotoKey),
 		instagramHandle: instagram,
+		linkedin:        optionalString(linkedin),
 		answers:         req.Answers,
 	}, true
 }
@@ -318,6 +297,7 @@ func surveyByUserID(ctx context.Context, store surveyStore, userID string) (*meS
 	var (
 		id        string
 		instagram pgtype.Text
+		linkedin  pgtype.Text
 		answers   []byte
 		entry     meSurveyEntry
 	)
@@ -329,6 +309,7 @@ func surveyByUserID(ctx context.Context, store surveyStore, userID string) (*meS
 			display_name,
 			photo_object_key,
 			instagram_handle,
+			linkedin,
 			answers,
 			submitted_at
 		from surveys
@@ -339,6 +320,7 @@ func surveyByUserID(ctx context.Context, store surveyStore, userID string) (*meS
 		&entry.DisplayName,
 		&entry.PhotoKey,
 		&instagram,
+		&linkedin,
 		&answers,
 		&entry.SubmittedAt,
 	)
@@ -347,6 +329,7 @@ func surveyByUserID(ctx context.Context, store surveyStore, userID string) (*meS
 	}
 
 	entry.InstagramHandle = textPtr(instagram)
+	entry.Linkedin = textPtr(linkedin)
 	if len(answers) == 0 {
 		answers = []byte(`{}`)
 	}
@@ -365,6 +348,13 @@ func nullableString(value *string) any {
 		return nil
 	}
 	return *value
+}
+
+func optionalString(value string) *string {
+	if value == "" {
+		return nil
+	}
+	return &value
 }
 
 func textPtr(value pgtype.Text) *string {

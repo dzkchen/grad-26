@@ -237,8 +237,7 @@ export function SurveyForm({
         <div>
           <h2 className="text-lg font-semibold tracking-tight">Your profile</h2>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            This is what classmates will see in the directory unless you hide
-            your socials.
+            This is what classmates will see in the directory.
           </p>
         </div>
 
@@ -299,6 +298,27 @@ export function SurveyForm({
             <FieldError
               id="instagram-handle-error"
               error={firstError(state, "instagram_handle")}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="linkedin" className="block text-sm font-medium">
+              LinkedIn handle
+            </label>
+            <input
+              id="linkedin"
+              name="linkedin"
+              type="text"
+              maxLength={200}
+              aria-invalid={firstError(state, "linkedin") ? "true" : undefined}
+              aria-describedby={
+                firstError(state, "linkedin") ? "linkedin-error" : undefined
+              }
+              className="w-full rounded-md border border-black/10 bg-transparent px-3 py-2 text-sm outline-none transition focus:border-black/40 dark:border-white/15 dark:focus:border-white/50"
+            />
+            <FieldError
+              id="linkedin-error"
+              error={firstError(state, "linkedin")}
             />
           </div>
         </div>
