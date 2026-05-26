@@ -5,27 +5,26 @@ import { useEffect, useState } from "react";
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 const MAX_BYTES = 5 * 1024 * 1024;
 
-type UploadStatus =
+type PhotoStatus =
   | { kind: "idle" }
-  | { kind: "signing" }
-  | { kind: "uploading" }
-  | { kind: "done"; key: string }
+  | { kind: "selected"; name: string }
   | { kind: "error"; message: string };
 
 export function PhotoUpload({
   value,
-  onUploadedKey,
-  publicHost,
+  onFileSelected,
+  isUploading,
+  disabled,
   error,
 }: {
   value: string;
-  onUploadedKey: (key: string) => void;
-  publicHost: string;
+  onFileSelected: (file: File | null) => void;
+  isUploading: boolean;
+  disabled: boolean;
   error?: string;
 }) {
-  const [status, setStatus] = useState<UploadStatus>({ kind: "idle" });
+  const [status, setStatus] = useState<PhotoStatus>({ kind: "idle" });
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const disabled = status.kind === "signing" || status.kind === "uploading";
 
   useEffect(() => {
     return () => {
@@ -33,8 +32,8 @@ export function PhotoUpload({
     };
   }, [previewUrl]);
 
-  async function handleFile(file: File) {
-    onUploadedKey("");
+  function handleFile(file: File) {
+    onFileSelected(null);
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
@@ -57,63 +56,11 @@ export function PhotoUpload({
     }
 
     setPreviewUrl(URL.createObjectURL(file));
-
-    setStatus({ kind: "signing" });
-    let signed: { url: string; key: string; expires_at: string };
-    try {
-      const res = await fetch("/api/upload-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content_type: file.type,
-          content_length: file.size,
-        }),
-      });
-      if (!res.ok) {
-        const body = await res.text();
-        throw new Error(`/api/upload-url ${res.status}: ${body}`);
-      }
-      signed = (await res.json()) as {
-        url: string;
-        key: string;
-        expires_at: string;
-      };
-    } catch (e) {
-      setStatus({
-        kind: "error",
-        message: e instanceof Error ? e.message : String(e),
-      });
-      return;
-    }
-
-    setStatus({ kind: "uploading" });
-    try {
-      const putRes = await fetch(signed.url, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-      if (!putRes.ok) {
-        const body = await putRes.text();
-        throw new Error(`R2 PUT ${putRes.status}: ${body}`);
-      }
-    } catch (e) {
-      setStatus({
-        kind: "error",
-        message: e instanceof Error ? e.message : String(e),
-      });
-      return;
-    }
-
-    onUploadedKey(signed.key);
-    setStatus({ kind: "done", key: signed.key });
+    onFileSelected(file);
+    setStatus({ kind: "selected", name: file.name });
   }
 
   const visibleError = status.kind === "error" ? status.message : error;
-  const publicUrl =
-    status.kind === "done" && publicHost
-      ? `https://${publicHost}/${status.key}`
-      : null;
 
   return (
     <div className="space-y-3">
@@ -125,12 +72,12 @@ export function PhotoUpload({
           id="survey-photo"
           type="file"
           accept={ALLOWED_TYPES.join(",")}
-          disabled={disabled}
+          disabled={isUploading || disabled}
           aria-invalid={visibleError ? "true" : undefined}
           aria-describedby={visibleError ? "survey-photo-error" : undefined}
           onChange={(event) => {
             const file = event.target.files?.[0];
-            if (file) void handleFile(file);
+            if (file) handleFile(file);
           }}
           className="block w-full text-sm file:mr-4 file:rounded-md file:border-0 file:bg-black file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-zinc-800 disabled:opacity-60 dark:file:bg-white dark:file:text-black dark:hover:file:bg-zinc-200"
         />
@@ -147,30 +94,19 @@ export function PhotoUpload({
       ) : null}
 
       <div aria-live="polite" className="text-sm">
-        {status.kind === "idle" ? (
+        {isUploading ? <span>Uploading photo...</span> : null}
+        {!isUploading && value ? (
+          <span className="text-green-700 dark:text-green-400">
+            Photo uploaded for this submission.
+          </span>
+        ) : null}
+        {!isUploading && !value && status.kind === "idle" ? (
           <span className="text-zinc-500">JPEG, PNG, or WebP. Max 5 MB.</span>
         ) : null}
-        {status.kind === "signing" ? <span>Requesting signed URL...</span> : null}
-        {status.kind === "uploading" ? <span>Uploading to R2...</span> : null}
-        {status.kind === "done" ? (
-          <p className="text-green-700 dark:text-green-400">
-            Uploaded
-            {publicUrl ? (
-              <>
-                {" "}
-                (
-                <a
-                  href={publicUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline"
-                >
-                  preview
-                </a>
-                )
-              </>
-            ) : null}
-          </p>
+        {!isUploading && !value && status.kind === "selected" ? (
+          <span className="text-zinc-600 dark:text-zinc-400">
+            {status.name} will upload when you submit.
+          </span>
         ) : null}
         {visibleError ? (
           <p id="survey-photo-error" className="whitespace-pre-wrap text-red-600">

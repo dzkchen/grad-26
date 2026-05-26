@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useState, type ChangeEvent } from "react";
-import { useFormStatus } from "react-dom";
 import colleges from "@/content/colleges.json";
 import collegePrograms from "@/content/collegeprograms.json";
 import { QUESTIONS, type Question } from "@/content/survey-questions";
@@ -16,9 +15,13 @@ import { ScaleSlider } from "@/components/survey/ScaleSlider";
 import { ShortText } from "@/components/survey/ShortText";
 import { SingleChoice } from "@/components/survey/SingleChoice";
 
-function SubmitButton({ disabled }: { disabled: boolean }) {
-  const { pending } = useFormStatus();
-
+function SubmitButton({
+  disabled,
+  pending,
+}: {
+  disabled: boolean;
+  pending: boolean;
+}) {
   return (
     <button
       type="submit"
@@ -46,6 +49,64 @@ function firstError(state: SubmitSurveyState, field: string) {
 const UNIVERSITY_CHOICE = "University";
 const COLLEGE_CHOICE = "College";
 const TRADES_CHOICE = "Trades/Apprenticeship";
+
+type UploadURLResponse = {
+  url: string;
+  key: string;
+  expires_at: string;
+};
+
+async function responseBody(response: Response) {
+  const text = await response.text();
+  if (!text) return response.statusText;
+
+  try {
+    const body = JSON.parse(text) as unknown;
+    if (
+      body &&
+      typeof body === "object" &&
+      "error" in body &&
+      body.error &&
+      typeof body.error === "object" &&
+      "message" in body.error &&
+      typeof body.error.message === "string"
+    ) {
+      return body.error.message;
+    }
+  } catch {
+    // Fall through to the raw response text.
+  }
+
+  return text;
+}
+
+async function uploadPhotoOnSubmit(file: File) {
+  const signedUrlResponse = await fetch("/api/upload-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      content_type: file.type,
+      content_length: file.size,
+    }),
+  });
+
+  if (!signedUrlResponse.ok) {
+    throw new Error(await responseBody(signedUrlResponse));
+  }
+
+  const signed = (await signedUrlResponse.json()) as UploadURLResponse;
+  const putResponse = await fetch(signed.url, {
+    method: "PUT",
+    headers: { "Content-Type": file.type },
+    body: file,
+  });
+
+  if (!putResponse.ok) {
+    throw new Error(await responseBody(putResponse));
+  }
+
+  return signed.key;
+}
 
 function SchoolWorkplaceInput({
   question,
@@ -203,14 +264,49 @@ function QuestionInput({
 
 export function SurveyForm({
   defaultDisplayName,
-  publicHost,
 }: {
   defaultDisplayName: string;
-  publicHost: string;
 }) {
-  const [state, formAction] = useActionState(submitSurvey, null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoKey, setPhotoKey] = useState("");
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [whatsNext, setWhatsNext] = useState("");
+  const [state, formAction, isPending] = useActionState(
+    async (
+      prev: SubmitSurveyState,
+      formData: FormData,
+    ): Promise<SubmitSurveyState> => {
+      let key = photoKey;
+
+      if (!key) {
+        if (!photoFile) {
+          return {
+            error: "Please fix the highlighted fields.",
+            fieldErrors: { photo_key: ["Photo is required."] },
+          };
+        }
+
+        setIsUploadingPhoto(true);
+        try {
+          key = await uploadPhotoOnSubmit(photoFile);
+          setPhotoKey(key);
+        } catch (e) {
+          return {
+            error: "Photo upload failed.",
+            fieldErrors: {
+              photo_key: [e instanceof Error ? e.message : String(e)],
+            },
+          };
+        } finally {
+          setIsUploadingPhoto(false);
+        }
+      }
+
+      formData.set("photo_key", key);
+      return submitSurvey(prev, formData);
+    },
+    null,
+  );
 
   function handleChange(event: ChangeEvent<HTMLFormElement>) {
     const target = event.target;
@@ -243,8 +339,12 @@ export function SurveyForm({
 
         <PhotoUpload
           value={photoKey}
-          onUploadedKey={setPhotoKey}
-          publicHost={publicHost}
+          onFileSelected={(file) => {
+            setPhotoFile(file);
+            setPhotoKey("");
+          }}
+          isUploading={isUploadingPhoto}
+          disabled={isPending}
           error={firstError(state, "photo_key")}
         />
 
@@ -346,7 +446,7 @@ export function SurveyForm({
       </section>
 
       <div className="flex items-center justify-end gap-3 border-t border-black/10 pt-6 dark:border-white/15">
-        <SubmitButton disabled={!photoKey} />
+        <SubmitButton disabled={!photoFile && !photoKey} pending={isPending} />
       </div>
     </form>
   );

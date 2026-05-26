@@ -185,10 +185,7 @@ async function SurveyContent() {
           Upload your photo and answer as many survey questions as you want.
         </p>
       </div>
-      <SurveyForm
-        defaultDisplayName={user.name ?? ""}
-        publicHost={publicHost}
-      />
+      <SurveyForm defaultDisplayName={user.name ?? ""} />
     </div>
   );
 }
