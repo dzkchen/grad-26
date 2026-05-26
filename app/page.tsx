@@ -1,8 +1,4 @@
 import Link from "next/link";
-import { Suspense } from "react";
-import { connection } from "next/server";
-
-const GRAD_DATE = new Date("2026-06-26T10:00:00-04:00");
 
 const CARDS = [
   {

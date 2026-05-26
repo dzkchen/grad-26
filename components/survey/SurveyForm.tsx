@@ -3,8 +3,10 @@
 import { useActionState, useState, type ChangeEvent } from "react";
 import { useFormStatus } from "react-dom";
 import colleges from "@/content/colleges.json";
+import collegePrograms from "@/content/collegeprograms.json";
 import { QUESTIONS, type Question } from "@/content/survey-questions";
 import universities from "@/content/universities.json";
+import universityPrograms from "@/content/universityprograms.json";
 import { submitSurvey, type SubmitSurveyState } from "@/app/survey/actions";
 import { LongText } from "@/components/survey/LongText";
 import { MultiChoice } from "@/components/survey/MultiChoice";
@@ -43,6 +45,7 @@ function firstError(state: SubmitSurveyState, field: string) {
 
 const UNIVERSITY_CHOICE = "University";
 const COLLEGE_CHOICE = "College";
+const TRADES_CHOICE = "Trades/Apprenticeship";
 
 function SchoolWorkplaceInput({
   question,
@@ -97,6 +100,58 @@ function SchoolWorkplaceInput({
   );
 }
 
+function ProgramMajorInput({
+  question,
+  name,
+  error,
+  whatsNext,
+}: {
+  question: Extract<Question, { type: "short_text" }>;
+  name: string;
+  error?: string;
+  whatsNext: string;
+}) {
+  const id = `answer-${question.id}`;
+  const list =
+    whatsNext === UNIVERSITY_CHOICE
+      ? { id: "university-programs-list", values: universityPrograms }
+      : whatsNext === COLLEGE_CHOICE || whatsNext === TRADES_CHOICE
+        ? { id: "college-programs-list", values: collegePrograms }
+        : null;
+
+  if (!list) {
+    return <ShortText question={question} name={name} error={error} />;
+  }
+
+  return (
+    <div className="space-y-2">
+      <label htmlFor={id} className="block text-sm font-medium">
+        {question.label}
+      </label>
+      <input
+        id={id}
+        name={name}
+        type="text"
+        list={list.id}
+        maxLength={question.maxLength}
+        aria-invalid={error ? "true" : undefined}
+        aria-describedby={error ? `${id}-error` : undefined}
+        className="w-full rounded-md border border-black/10 bg-transparent px-3 py-2 text-sm outline-none transition focus:border-black/40 dark:border-white/15 dark:focus:border-white/50"
+      />
+      <datalist id={list.id}>
+        {list.values.map((value) => (
+          <option key={value} value={value} />
+        ))}
+      </datalist>
+      {error ? (
+        <p id={`${id}-error`} className="text-sm text-red-600">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function QuestionInput({
   question,
   error,
@@ -111,6 +166,17 @@ function QuestionInput({
   if (question.id === "school_workplace" && question.type === "short_text") {
     return (
       <SchoolWorkplaceInput
+        question={question}
+        name={name}
+        error={error}
+        whatsNext={whatsNext}
+      />
+    );
+  }
+
+  if (question.id === "program_major" && question.type === "short_text") {
+    return (
+      <ProgramMajorInput
         question={question}
         name={name}
         error={error}
