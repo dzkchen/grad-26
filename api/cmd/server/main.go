@@ -63,6 +63,7 @@ func main() {
 	r.Get("/health", handlers.Health)
 	r.Get("/me/survey", handlers.MeSurvey(dbpool))
 	r.Get("/directory", handlers.Directory(dbpool, publicHost))
+	r.Get("/stats/aggregates", handlers.StatsAggregates(dbpool))
 	r.Post("/upload/url", handlers.UploadURL(r2Client))
 	r.Post("/survey", handlers.CreateSurvey(dbpool, r2Client))
 
