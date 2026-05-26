@@ -5,9 +5,6 @@ export const metadata = {
   title: "Stats (dev preview) — Class of 2026",
 };
 
-// Dev-only preview: bypasses the de-anonymization floor so the page renders
-// with even a single test submission. Production /stats keeps the 5-submission
-// guard via the default min.
 export default async function DevStatsPage() {
   const data = await getStatsAggregates(1);
 
