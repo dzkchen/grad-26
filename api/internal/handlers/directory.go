@@ -27,11 +27,11 @@ type directoryStore interface {
 }
 
 type directoryEntry struct {
-	ID          string            `json:"id"`
-	DisplayName string            `json:"display_name"`
-	PhotoURL    string            `json:"photo_url"`
-	Socials     *directorySocial  `json:"socials"`
-	Details     directoryDetails  `json:"details"`
+	ID          string           `json:"id"`
+	DisplayName string           `json:"display_name"`
+	PhotoURL    string           `json:"photo_url"`
+	Socials     *directorySocial `json:"socials"`
+	Details     directoryDetails `json:"details"`
 }
 
 type directorySocial struct {
@@ -140,7 +140,7 @@ func queryDirectory(ctx context.Context, store directoryStore, publicHost string
 	if hasCursor {
 		rows, err = store.Query(
 			ctx,
-			`select id::text, display_name, photo_object_key, instagram_handle, hide_socials, answers, submitted_at
+			`select id::text, display_name, photo_object_key, instagram_handle, answers, submitted_at
 			from surveys
 			where (submitted_at, id) < ($1, $2)
 			order by submitted_at desc, id desc
@@ -150,7 +150,7 @@ func queryDirectory(ctx context.Context, store directoryStore, publicHost string
 	} else {
 		rows, err = store.Query(
 			ctx,
-			`select id::text, display_name, photo_object_key, instagram_handle, hide_socials, answers, submitted_at
+			`select id::text, display_name, photo_object_key, instagram_handle, answers, submitted_at
 			from surveys
 			order by submitted_at desc, id desc
 			limit $1`,
@@ -167,7 +167,6 @@ func queryDirectory(ctx context.Context, store directoryStore, publicHost string
 		displayName string
 		photoKey    string
 		instagram   pgtype.Text
-		hideSocials bool
 		answers     []byte
 		submittedAt time.Time
 	}
@@ -175,7 +174,7 @@ func queryDirectory(ctx context.Context, store directoryStore, publicHost string
 	collected := make([]rawRow, 0, fetch)
 	for rows.Next() {
 		var rr rawRow
-		if err := rows.Scan(&rr.id, &rr.displayName, &rr.photoKey, &rr.instagram, &rr.hideSocials, &rr.answers, &rr.submittedAt); err != nil {
+		if err := rows.Scan(&rr.id, &rr.displayName, &rr.photoKey, &rr.instagram, &rr.answers, &rr.submittedAt); err != nil {
 			return nil, nil, err
 		}
 		collected = append(collected, rr)
@@ -200,7 +199,7 @@ func queryDirectory(ctx context.Context, store directoryStore, publicHost string
 			PhotoURL:    photoURL(publicHost, rr.photoKey),
 			Details:     extractDetails(rr.answers),
 		}
-		if !rr.hideSocials && rr.instagram.Valid && rr.instagram.String != "" {
+		if rr.instagram.Valid && rr.instagram.String != "" {
 			entry.Socials = &directorySocial{Instagram: rr.instagram.String}
 		}
 		entries = append(entries, entry)

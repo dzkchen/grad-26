@@ -303,16 +303,6 @@ export function SurveyForm({
           </div>
         </div>
 
-        <div className="text-sm">
-          <label className="flex items-start gap-3 rounded-md border border-black/10 p-3 dark:border-white/15">
-            <input
-              name="hide_socials"
-              type="checkbox"
-              className="mt-0.5 size-4 rounded accent-black dark:accent-white"
-            />
-            <span>Hide my social links from the public directory</span>
-          </label>
-        </div>
       </section>
 
       <section className="space-y-5">

@@ -8,7 +8,6 @@ type SurveyEntry = {
   display_name: string;
   photo_key: string;
   instagram_handle: string | null;
-  hide_socials: boolean;
   answers: Record<string, unknown>;
   submitted_at: string;
 };
@@ -79,11 +78,9 @@ function AlreadySubmitted({
               <div>
                 <dt className="text-zinc-500">Socials</dt>
                 <dd>
-                  {entry.hide_socials
-                    ? "Hidden from directory"
-                    : entry.instagram_handle
-                      ? `Instagram: ${entry.instagram_handle}`
-                      : "None added"}
+                  {entry.instagram_handle
+                    ? `Instagram: ${entry.instagram_handle}`
+                    : "None added"}
                 </dd>
               </div>
               <div>

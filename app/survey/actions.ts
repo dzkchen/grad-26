@@ -33,7 +33,6 @@ function formDataToSurveyInput(formData: FormData) {
     display_name: formData.get("display_name"),
     photo_key: formData.get("photo_key"),
     instagram_handle: formData.get("instagram_handle"),
-    hide_socials: formData.get("hide_socials"),
     answers,
   };
 }

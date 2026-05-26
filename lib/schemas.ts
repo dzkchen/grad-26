@@ -4,11 +4,6 @@ import { QUESTIONS, type Question } from "@/content/survey-questions";
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 const PHOTO_KEY_RE = /^surveys\/[0-9a-f-]+\.(jpg|jpeg|png|webp)$/;
 
-const CheckboxSchema = z.preprocess(
-  (value) => value === true || value === "true" || value === "on",
-  z.boolean(),
-);
-
 function trimmedRequired(max: number, label: string) {
   return z
     .string({ error: `${label} is required.` })
@@ -143,7 +138,6 @@ export const SurveyFormSchema = z.object({
     (value) => value == null || !value.startsWith("@"),
     { error: "Instagram handle should not include @." },
   ),
-  hide_socials: CheckboxSchema,
   answers: SurveyAnswersSchema,
 });
 

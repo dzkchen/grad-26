@@ -31,7 +31,6 @@ type createSurveyRequest struct {
 	DisplayName     string         `json:"display_name"`
 	PhotoKey        string         `json:"photo_key"`
 	InstagramHandle *string        `json:"instagram_handle"`
-	HideSocials     bool           `json:"hide_socials"`
 	Answers         map[string]any `json:"answers"`
 }
 
@@ -50,7 +49,6 @@ type meSurveyEntry struct {
 	DisplayName     string          `json:"display_name"`
 	PhotoKey        string          `json:"photo_key"`
 	InstagramHandle *string         `json:"instagram_handle"`
-	HideSocials     bool            `json:"hide_socials"`
 	Answers         json.RawMessage `json:"answers"`
 	SubmittedAt     time.Time       `json:"submitted_at"`
 }
@@ -159,16 +157,14 @@ func insertSurvey(ctx context.Context, store surveyStore, surveyID string, userI
 			display_name,
 			photo_object_key,
 			instagram_handle,
-			hide_socials,
 			answers
-		) values ($1, $2, $3, $4, $5, $6, $7::jsonb)
+		) values ($1, $2, $3, $4, $5, $6::jsonb)
 		returning id::text, submitted_at`,
 		surveyID,
 		userID,
 		req.displayName,
 		req.photoKey,
 		nullableString(req.instagramHandle),
-		req.hideSocials,
 		answersJSON,
 	).Scan(&resp.ID, &resp.SubmittedAt)
 	if err == nil {
@@ -192,10 +188,9 @@ func insertSurvey(ctx context.Context, store surveyStore, surveyID string, userI
 			photo_object_key,
 			instagram_handle,
 			post_secondary,
-			hide_socials,
 			hide_post_secondary,
 			answers
-		) values ($1, $2, $3, $4, $5, $6, $7, true, $8::jsonb)
+		) values ($1, $2, $3, $4, $5, $6, true, $7::jsonb)
 		returning id::text, submitted_at`,
 		surveyID,
 		userID,
@@ -203,7 +198,6 @@ func insertSurvey(ctx context.Context, store surveyStore, surveyID string, userI
 		req.photoKey,
 		nullableString(req.instagramHandle),
 		"Not provided",
-		req.hideSocials,
 		answersJSON,
 	).Scan(&resp.ID, &resp.SubmittedAt)
 	if err != nil {
@@ -260,7 +254,6 @@ type validatedSurveyRequest struct {
 	displayName     string
 	photoKey        string
 	instagramHandle *string
-	hideSocials     bool
 	answers         map[string]any
 }
 
@@ -286,7 +279,6 @@ func validateCreateSurveyRequest(w http.ResponseWriter, req createSurveyRequest)
 		displayName:     displayName,
 		photoKey:        strings.TrimSpace(req.PhotoKey),
 		instagramHandle: instagram,
-		hideSocials:     req.HideSocials,
 		answers:         req.Answers,
 	}, true
 }
@@ -324,11 +316,10 @@ func userEmailMatches(ctx context.Context, store surveyStore, userID string, cal
 
 func surveyByUserID(ctx context.Context, store surveyStore, userID string) (*meSurveyEntry, string, error) {
 	var (
-		id          string
-		instagram   pgtype.Text
-		answers     []byte
-		entry       meSurveyEntry
-		hideSocials bool
+		id        string
+		instagram pgtype.Text
+		answers   []byte
+		entry     meSurveyEntry
 	)
 
 	err := store.QueryRow(
@@ -338,7 +329,6 @@ func surveyByUserID(ctx context.Context, store surveyStore, userID string) (*meS
 			display_name,
 			photo_object_key,
 			instagram_handle,
-			hide_socials,
 			answers,
 			submitted_at
 		from surveys
@@ -349,7 +339,6 @@ func surveyByUserID(ctx context.Context, store surveyStore, userID string) (*meS
 		&entry.DisplayName,
 		&entry.PhotoKey,
 		&instagram,
-		&hideSocials,
 		&answers,
 		&entry.SubmittedAt,
 	)
@@ -358,7 +347,6 @@ func surveyByUserID(ctx context.Context, store surveyStore, userID string) (*meS
 	}
 
 	entry.InstagramHandle = textPtr(instagram)
-	entry.HideSocials = hideSocials
 	if len(answers) == 0 {
 		answers = []byte(`{}`)
 	}
