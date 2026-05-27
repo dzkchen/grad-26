@@ -1,31 +1,51 @@
+import Image from "next/image";
 import Link from "next/link";
 import { auth, signIn, signOut } from "@/lib/auth";
+import { NavScroll } from "./NavScroll";
 
 const PUBLIC_LINKS = [
   { href: "/directory", label: "Directory" },
-  { href: "/stats", label: "Stats" },
   { href: "/rewind", label: "Rewind" },
+  { href: "/stats", label: "Stats" },
   { href: "/about", label: "About" },
 ];
 
-function NavShell({ children }: { children: React.ReactNode }) {
+function Brand() {
   return (
-    <header className="border-b border-black/8 dark:border-white/12">
-      <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-        <Link href="/" className="font-semibold tracking-tight">
-          Class of 2026
+    <Link href="/" className="jf-nav-logo">
+      <Image src="/logo.png" alt="Fraser '26" width={36} height={36} priority />
+      <span>Fraser &apos;26</span>
+    </Link>
+  );
+}
+
+function Links({ isAdmin }: { isAdmin: boolean }) {
+  return (
+    <ul className="jf-nav-links">
+      {PUBLIC_LINKS.map((link) => (
+        <li key={link.href}>
+          <Link href={link.href}>{link.label}</Link>
+        </li>
+      ))}
+      {isAdmin ? (
+        <li>
+          <Link href="/admin" className="jf-nav-admin">
+            Admin
+          </Link>
+        </li>
+      ) : null}
+      <li>
+        <Link href="/survey" className="jf-nav-cta">
+          Take Survey
         </Link>
-        {children}
-      </nav>
-    </header>
+      </li>
+    </ul>
   );
 }
 
 export function NavFallback() {
   return (
-    <NavShell>
-      <div className="h-6" aria-hidden />
-    </NavShell>
+    <NavScroll brand={<Brand />} menu={<Links isAdmin={false} />} />
   );
 }
 
@@ -34,44 +54,22 @@ export async function Nav() {
   const user = session?.user;
   const isAdmin = user?.role === "admin";
 
-  return (
-    <NavShell>
-      <ul className="hidden gap-6 text-sm text-zinc-600 sm:flex dark:text-zinc-300">
-        {PUBLIC_LINKS.map((link) => (
-          <li key={link.href}>
-            <Link
-              href={link.href}
-              className="hover:text-black dark:hover:text-white"
-            >
-              {link.label}
-            </Link>
-          </li>
-        ))}
-        {isAdmin ? (
-          <li>
-            <Link
-              href="/admin"
-              className="font-medium text-black hover:underline dark:text-white"
-            >
-              Admin
-            </Link>
-          </li>
-        ) : null}
-      </ul>
-      <div className="flex items-center gap-3 text-sm">
+  const menu = (
+    <>
+      <Links isAdmin={isAdmin} />
+      <div className="jf-nav-auth">
         {user ? (
           <>
-            <span className="hidden text-zinc-500 sm:inline">{user.email}</span>
+            {user.email ? (
+              <span className="jf-nav-user">{user.email}</span>
+            ) : null}
             <form
               action={async () => {
                 "use server";
                 await signOut({ redirectTo: "/" });
               }}
             >
-              <button
-                type="submit"
-                className="rounded-md border border-black/10 px-3 py-1.5 hover:bg-black/4 dark:border-white/15 dark:hover:bg-white/6"
-              >
+              <button type="submit" className="jf-nav-ghost">
                 Sign out
               </button>
             </form>
@@ -83,15 +81,14 @@ export async function Nav() {
               await signIn("google", { redirectTo: "/" });
             }}
           >
-            <button
-              type="submit"
-              className="rounded-md border border-black/10 px-3 py-1.5 hover:bg-black/4 dark:border-white/15 dark:hover:bg-white/6"
-            >
+            <button type="submit" className="jf-nav-ghost">
               Sign in
             </button>
           </form>
         )}
       </div>
-    </NavShell>
+    </>
   );
+
+  return <NavScroll brand={<Brand />} menu={menu} />;
 }
