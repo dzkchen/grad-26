@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<h1 align="center">Fraser Grads '26</h1>
 
-## Getting Started
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white)
+![Postgres](https://img.shields.io/badge/Postgres-Supabase-3FCF8E?logo=supabase&logoColor=white)
+![Cloudflare R2](https://img.shields.io/badge/Cloudflare-R2-F38020?logo=cloudflare&logoColor=white)
 
-First, run the development server:
+Fraser Grads '26 is an unofficial grad site for John Fraser Secondary School's Class of 2026. It puts the class directory, senior survey, class stats, and future memory/scrapbook features in one place so our grad class can look back after graduation and stay connected. Also a good way for lower grades to reach out or see some stats to know more about senior life!
+
+This project was a fun way to make a project that actually matters but allows me to learn (Golang + Docker + etc)
+
+## Tech Stack
+
+- **Frontend:** Next.js 16 App Router, React 19, TypeScript, Tailwind CSS 4
+- **Auth:** Auth.js / NextAuth v5 beta with Google OAuth and the Postgres adapter
+- **API:** Go 1.26, chi router, HMAC-signed internal requests from Next.js
+- **Database:** Postgres (Supabase)
+- **Object storage:** Cloudflare R2 for submitted photos
+- **Charts:** Recharts
+- **Validation:** Zod in the Next.js app, generated Go validators for API-side survey validation
+- **Deployment shape:** Next.js on Vercel, Go API on Cloud Run or any HTTP host, Postgres and R2 as managed services
+
+## Local Setup
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Create a local env file:
+
+```bash
+cp .env.example .env
+```
+
+Apply the database migrations in `db/migrations/` to your Postgres database. The first migration creates the Auth.js adapter tables plus the `surveys` table.
+
+Start the Go API in one terminal:
+
+```bash
+cd api
+go run ./cmd/server
+```
+
+Start the Next.js app in another terminal:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Code Quality Note
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This codebase was built with product shipping as the priority. Some areas are intentionally pragmatic rather than the cleanest possible architecture: duplicated UI patterns, rough edges around deployment setup, limited abstractions, and features that were finished under deadline pressure. Treat the current code as a working product baseline, not a polished reference implementation.
