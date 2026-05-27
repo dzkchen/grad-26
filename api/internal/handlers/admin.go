@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -27,15 +28,16 @@ type objectDeleter interface {
 }
 
 type adminSurvey struct {
-	ID              string     `json:"id"`
-	UserEmail       string     `json:"user_email"`
-	DisplayName     string     `json:"display_name"`
-	PhotoURL        string     `json:"photo_url"`
-	InstagramHandle string     `json:"instagram_handle,omitempty"`
-	Linkedin        string     `json:"linkedin,omitempty"`
-	HideSocials     bool       `json:"hide_socials"`
-	SubmittedAt     time.Time  `json:"submitted_at"`
-	ApprovedAt      *time.Time `json:"approved_at"`
+	ID              string          `json:"id"`
+	UserEmail       string          `json:"user_email"`
+	DisplayName     string          `json:"display_name"`
+	PhotoURL        string          `json:"photo_url"`
+	InstagramHandle string          `json:"instagram_handle,omitempty"`
+	Linkedin        string          `json:"linkedin,omitempty"`
+	HideSocials     bool            `json:"hide_socials"`
+	Answers         json.RawMessage `json:"answers"`
+	SubmittedAt     time.Time       `json:"submitted_at"`
+	ApprovedAt      *time.Time      `json:"approved_at"`
 }
 
 type adminListResponse struct {
@@ -61,6 +63,7 @@ func AdminListSurveys(store adminStore, publicHost string, isAdmin auth.IsAdmin)
 				s.instagram_handle,
 				s.linkedin,
 				s.hide_socials,
+				s.answers,
 				s.submitted_at,
 				s.approved_at
 			from surveys s
@@ -80,6 +83,7 @@ func AdminListSurveys(store adminStore, publicHost string, isAdmin auth.IsAdmin)
 				photoKey  string
 				instagram pgtype.Text
 				linkedin  sql.NullString
+				answers   []byte
 				approved  pgtype.Timestamptz
 			)
 			if err := rows.Scan(
@@ -90,6 +94,7 @@ func AdminListSurveys(store adminStore, publicHost string, isAdmin auth.IsAdmin)
 				&instagram,
 				&linkedin,
 				&row.HideSocials,
+				&answers,
 				&row.SubmittedAt,
 				&approved,
 			); err != nil {
@@ -103,6 +108,10 @@ func AdminListSurveys(store adminStore, publicHost string, isAdmin auth.IsAdmin)
 			if linkedin.Valid {
 				row.Linkedin = linkedin.String
 			}
+			if len(answers) == 0 {
+				answers = []byte(`{}`)
+			}
+			row.Answers = json.RawMessage(answers)
 			if approved.Valid {
 				t := approved.Time
 				row.ApprovedAt = &t

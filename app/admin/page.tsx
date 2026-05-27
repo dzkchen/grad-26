@@ -105,11 +105,7 @@ function AdminTable({ surveys }: { surveys: AdminSurvey[] }) {
                 )}
               </td>
               <td className="px-4 py-3 text-right">
-                <RowActions
-                  id={survey.id}
-                  displayName={survey.display_name}
-                  approved={survey.approved_at !== null}
-                />
+                <RowActions survey={survey} />
               </td>
             </tr>
           ))}
