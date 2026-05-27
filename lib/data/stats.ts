@@ -18,7 +18,13 @@ export type ChoiceAggregate = {
   order: string[];
 };
 
-export type Aggregate = NumericAggregate | ChoiceAggregate;
+export type TextAggregate = {
+  type: "short_text" | "long_text";
+  values: Array<{ value: string; count: number }>;
+  count: number;
+};
+
+export type Aggregate = NumericAggregate | ChoiceAggregate | TextAggregate;
 
 export type StatsAggregates = {
   total_submissions: number;

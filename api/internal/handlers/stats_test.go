@@ -117,7 +117,7 @@ func TestComputeAggregates_SingleChoice(t *testing.T) {
 		{"final_grade_bucket": "80-89"},
 		{"final_grade_bucket": "90-99"},
 		{"final_grade_bucket": "not-a-real-choice"}, // ignored
-		{},                                          // skipped (no answer)
+		{}, // skipped (no answer)
 	}
 
 	agg := computeAggregates([]questions.Question{q}, answers)["final_grade_bucket"].(choiceAggregate)
@@ -170,15 +170,48 @@ func TestComputeAggregates_MultiChoice(t *testing.T) {
 	}
 }
 
-func TestComputeAggregates_SkipsFreeText(t *testing.T) {
+func TestComputeAggregates_FreeText(t *testing.T) {
 	qs := []questions.Question{
 		{Id: "quote", Type: "long_text"},
 		{Id: "name", Type: "short_text"},
 	}
-	answers := []map[string]any{{"quote": "hi", "name": "Alex"}}
+	answers := []map[string]any{
+		{"quote": " Sleep more. ", "name": "Alex"},
+		{"quote": "Sleep   more.", "name": "alex"},
+		{"quote": "Join a club.", "name": ""},
+		{"quote": 9, "name": "Bo"},
+		{},
+	}
 	got := computeAggregates(qs, answers)
-	if len(got) != 0 {
-		t.Fatalf("aggregates = %v, want empty (free-text skipped)", got)
+
+	quoteAgg, ok := got["quote"].(textAggregate)
+	if !ok {
+		t.Fatalf("quote aggregate type = %T, want textAggregate", got["quote"])
+	}
+	if quoteAgg.Type != "long_text" || quoteAgg.Count != 3 {
+		t.Fatalf("quote aggregate meta = %+v", quoteAgg)
+	}
+	wantQuotes := []textEntry{
+		{Value: "Sleep more.", Count: 2},
+		{Value: "Join a club.", Count: 1},
+	}
+	if fmt.Sprint(quoteAgg.Values) != fmt.Sprint(wantQuotes) {
+		t.Fatalf("quote values = %+v, want %+v", quoteAgg.Values, wantQuotes)
+	}
+
+	nameAgg, ok := got["name"].(textAggregate)
+	if !ok {
+		t.Fatalf("name aggregate type = %T, want textAggregate", got["name"])
+	}
+	if nameAgg.Type != "short_text" || nameAgg.Count != 3 {
+		t.Fatalf("name aggregate meta = %+v", nameAgg)
+	}
+	wantNames := []textEntry{
+		{Value: "Alex", Count: 2},
+		{Value: "Bo", Count: 1},
+	}
+	if fmt.Sprint(nameAgg.Values) != fmt.Sprint(wantNames) {
+		t.Fatalf("name values = %+v, want %+v", nameAgg.Values, wantNames)
 	}
 }
 
@@ -194,11 +227,7 @@ func TestComputeAggregates_RealQuestionSchema(t *testing.T) {
 	for _, q := range questions.Questions {
 		_, present := got[q.Id]
 		switch q.Type {
-		case "short_text", "long_text":
-			if present {
-				t.Errorf("free-text question %q should not appear in aggregates", q.Id)
-			}
-		default:
+		case "short_text", "long_text", "number", "scale_1_10", "single_choice", "multi_choice":
 			if !present {
 				t.Errorf("aggregatable question %q missing from aggregates", q.Id)
 			}
@@ -249,9 +278,9 @@ func TestParseStatsMin(t *testing.T) {
 
 // fakeStatsStore implements statsStore over an in-memory slice of answers blobs.
 type fakeStatsStore struct {
-	answers   [][]byte // raw JSON for each survey row
-	countErr  error
-	queryErr  error
+	answers  [][]byte // raw JSON for each survey row
+	countErr error
+	queryErr error
 }
 
 type fakeRow struct {
@@ -300,8 +329,8 @@ func (f *fakeRows) Scan(dest ...any) error {
 	return nil
 }
 
-func (f *fakeRows) Close()                          {}
-func (f *fakeRows) Err() error                      { return nil }
+func (f *fakeRows) Close()     {}
+func (f *fakeRows) Err() error { return nil }
 
 func (s *fakeStatsStore) QueryRow(_ context.Context, _ string, _ ...any) pgx.Row {
 	if s.countErr != nil {

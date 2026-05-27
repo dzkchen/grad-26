@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/dzkchen/grad-26/api/internal/questions"
 	"github.com/jackc/pgx/v5"
@@ -39,6 +40,17 @@ type choiceAggregate struct {
 	Type    string         `json:"type"`
 	Choices map[string]int `json:"choices"`
 	Order   []string       `json:"order"`
+}
+
+type textEntry struct {
+	Value string `json:"value"`
+	Count int    `json:"count"`
+}
+
+type textAggregate struct {
+	Type   string      `json:"type"`
+	Values []textEntry `json:"values"`
+	Count  int         `json:"count"`
 }
 
 // StatsAggregates implements GET /stats/aggregates per planning/API_SPEC.md §4.5.
@@ -129,11 +141,13 @@ func (e *statsParamError) Error() string { return e.msg }
 
 // computeAggregates is the pure aggregation function — given the canonical
 // question schema and a slice of parsed answers (one map per row), produce
-// the per-question aggregate map. Free-text question types are skipped.
+// the per-question aggregate map.
 func computeAggregates(qs []questions.Question, answers []map[string]any) map[string]any {
 	out := map[string]any{}
 	for _, q := range qs {
 		switch q.Type {
+		case "short_text", "long_text":
+			out[q.Id] = freeTextAggregate(q, answers)
 		case "scale_1_10":
 			out[q.Id] = scaleAggregate(q, answers)
 		case "number":
@@ -145,6 +159,42 @@ func computeAggregates(qs []questions.Question, answers []map[string]any) map[st
 		}
 	}
 	return out
+}
+
+func freeTextAggregate(q questions.Question, answers []map[string]any) textAggregate {
+	counts := map[string]textEntry{}
+	for _, row := range answers {
+		s, ok := textAnswer(row[q.Id])
+		if !ok {
+			continue
+		}
+		key := strings.ToLower(s)
+		entry := counts[key]
+		if entry.Value == "" {
+			entry.Value = s
+		}
+		entry.Count++
+		counts[key] = entry
+	}
+
+	values := make([]textEntry, 0, len(counts))
+	total := 0
+	for _, entry := range counts {
+		values = append(values, entry)
+		total += entry.Count
+	}
+	sort.Slice(values, func(i, j int) bool {
+		if values[i].Count != values[j].Count {
+			return values[i].Count > values[j].Count
+		}
+		return strings.ToLower(values[i].Value) < strings.ToLower(values[j].Value)
+	})
+
+	return textAggregate{
+		Type:   q.Type,
+		Values: values,
+		Count:  total,
+	}
 }
 
 func scaleAggregate(q questions.Question, answers []map[string]any) numericAggregate {
@@ -267,6 +317,18 @@ func zeroChoiceCounts(choices []string) map[string]int {
 		m[c] = 0
 	}
 	return m
+}
+
+func textAnswer(v any) (string, bool) {
+	s, ok := v.(string)
+	if !ok {
+		return "", false
+	}
+	s = strings.Join(strings.Fields(s), " ")
+	if s == "" {
+		return "", false
+	}
+	return s, true
 }
 
 func numericAnswer(v any) (float64, bool) {
