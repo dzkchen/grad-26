@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { requireUser, type AuthUser } from "@/lib/auth";
 import { GoApiConnectionError, GoApiError, goClient } from "@/lib/go-client";
 import { SurveyForm } from "@/components/survey/SurveyForm";
@@ -23,100 +23,6 @@ async function getMySurvey(user: AuthUser) {
     "/me/survey",
     { user_id: user.id },
     { callerEmail: user.email },
-  );
-}
-
-function firstAdminEmail() {
-  return (
-    process.env.ADMIN_EMAILS?.split(",").map((email) => email.trim()).find(Boolean) ??
-    "the site admin"
-  );
-}
-
-function AlreadySubmitted({
-  id,
-  entry,
-  publicHost,
-}: {
-  id: string;
-  entry: SurveyEntry;
-  publicHost: string;
-}) {
-  const photoUrl = publicHost ? `https://${publicHost}/${entry.photo_key}` : null;
-  const submittedAt = new Intl.DateTimeFormat("en-CA", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(entry.submitted_at));
-  const approvalText = entry.approved_at
-    ? `Live on the directory since ${new Intl.DateTimeFormat("en-CA", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(new Date(entry.approved_at))}`
-    : "Awaiting admin approval - your profile isn't on the public directory yet";
-
-  return (
-    <div className="mx-auto max-w-3xl px-4 py-12">
-      <div
-        className={
-          entry.approved_at
-            ? "mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-200"
-            : "mb-4 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200"
-        }
-      >
-        {approvalText}
-      </div>
-      <div className="rounded-md border border-black/10 p-6 dark:border-white/15">
-        <div className="flex flex-col gap-5 sm:flex-row">
-          {photoUrl ? (
-            <Image
-              src={photoUrl}
-              alt={`${entry.display_name} survey photo`}
-              width={160}
-              height={160}
-              className="aspect-square w-32 rounded-md object-cover"
-            />
-          ) : null}
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-green-700 dark:text-green-400">
-              Already submitted
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight">
-              {entry.display_name}
-            </h1>
-            <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
-              <div>
-                <dt className="text-zinc-500">Submission ID</dt>
-                <dd className="font-mono text-xs">{id}</dd>
-              </div>
-              <div>
-                <dt className="text-zinc-500">Submitted</dt>
-                <dd>{submittedAt}</dd>
-              </div>
-              <div>
-                <dt className="text-zinc-500">Socials</dt>
-                <dd>
-                  {[
-                    entry.instagram_handle &&
-                      `Instagram: ${entry.instagram_handle}`,
-                    entry.linkedin && `LinkedIn: ${entry.linkedin}`,
-                  ]
-                    .filter(Boolean)
-                    .join(", ") || "None added"}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-zinc-500">Survey answers</dt>
-                <dd>{Object.keys(entry.answers ?? {}).length} saved</dd>
-              </div>
-            </dl>
-            <p className="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
-              Want to change something? Email {firstAdminEmail()}. There is no
-              self-serve edit flow in v1.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -178,16 +84,8 @@ async function SurveyContent() {
     }
     throw e;
   }
-  const publicHost = process.env.R2_PUBLIC_HOSTNAME ?? "";
-
   if (existing.submitted) {
-    return (
-      <AlreadySubmitted
-        id={existing.id}
-        entry={existing.entry}
-        publicHost={publicHost}
-      />
-    );
+    redirect("/survey/thanks");
   }
 
   return <SurveyForm defaultDisplayName={user.name ?? ""} />;

@@ -78,7 +78,7 @@ export async function submitSurvey(
     );
   } catch (e) {
     if (e instanceof GoApiError && e.code === "conflict") {
-      return { error: "You have already submitted." };
+      redirect("/survey/thanks");
     }
     if (e instanceof GoApiError) {
       return { error: e.message };

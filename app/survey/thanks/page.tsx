@@ -5,7 +5,7 @@ async function ThanksContent() {
   await requireUser();
 
   return (
-    <div className="jf-survey-form-outer">
+    <div className="jf-survey-form-outer jf-survey-thanks-outer">
       <div className="jf-survey-form-card">
         <section className="jf-survey-success is-active">
           <div className="jf-survey-success-icon" aria-hidden="true">

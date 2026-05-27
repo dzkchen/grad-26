@@ -705,7 +705,7 @@ export function SurveyForm({
 
   if (submitted) {
     return (
-      <div className="jf-survey-form-outer">
+      <div className="jf-survey-form-outer jf-survey-thanks-outer">
         <div className="jf-survey-form-card">
           <SuccessScreen />
         </div>

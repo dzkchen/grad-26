@@ -965,6 +965,16 @@ body {
   background: var(--jf-navy);
   color: var(--jf-white);
 }
+.jf-survey-thanks-outer {
+  flex: 1;
+  min-height: calc(100svh - 64px);
+  padding-bottom: 32px;
+}
+main:has(> .jf-survey-thanks-outer) {
+  display: flex;
+  flex-direction: column;
+  background: var(--jf-navy);
+}
 .jf-survey-form-card {
   display: flex;
   flex-direction: column;
