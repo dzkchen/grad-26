@@ -12,6 +12,7 @@ export type AdminSurvey = {
   linkedin?: string;
   hide_socials: boolean;
   submitted_at: string;
+  approved_at: string | null;
 };
 
 type GoAdminListResponse = {

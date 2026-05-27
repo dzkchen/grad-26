@@ -11,6 +11,7 @@ type SurveyEntry = {
   linkedin: string | null;
   answers: Record<string, unknown>;
   submitted_at: string;
+  approved_at: string | null;
 };
 
 type MeSurveyResponse =
@@ -46,9 +47,24 @@ function AlreadySubmitted({
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(entry.submitted_at));
+  const approvalText = entry.approved_at
+    ? `Live on the directory since ${new Intl.DateTimeFormat("en-CA", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(new Date(entry.approved_at))}`
+    : "Awaiting admin approval - your profile isn't on the public directory yet";
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
+      <div
+        className={
+          entry.approved_at
+            ? "mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-200"
+            : "mb-4 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200"
+        }
+      >
+        {approvalText}
+      </div>
       <div className="rounded-md border border-black/10 p-6 dark:border-white/15">
         <div className="flex flex-col gap-5 sm:flex-row">
           {photoUrl ? (

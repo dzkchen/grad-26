@@ -144,7 +144,8 @@ func queryDirectory(ctx context.Context, store directoryStore, publicHost string
 			ctx,
 			`select id::text, display_name, photo_object_key, instagram_handle, linkedin, answers, submitted_at
 			from surveys
-			where (submitted_at, id) < ($1, $2)
+			where approved_at is not null
+			and (submitted_at, id) < ($1, $2)
 			order by submitted_at desc, id desc
 			limit $3`,
 			cursorTS, cursorID, fetch,
@@ -154,6 +155,7 @@ func queryDirectory(ctx context.Context, store directoryStore, publicHost string
 			ctx,
 			`select id::text, display_name, photo_object_key, instagram_handle, linkedin, answers, submitted_at
 			from surveys
+			where approved_at is not null
 			order by submitted_at desc, id desc
 			limit $1`,
 			fetch,

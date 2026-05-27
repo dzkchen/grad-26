@@ -53,6 +53,7 @@ type meSurveyEntry struct {
 	Linkedin        *string         `json:"linkedin"`
 	Answers         json.RawMessage `json:"answers"`
 	SubmittedAt     time.Time       `json:"submitted_at"`
+	ApprovedAt      *time.Time      `json:"approved_at"`
 }
 
 var surveyPhotoKeyRE = regexp.MustCompile(`^surveys/([0-9a-f-]+)\.(jpg|jpeg|png|webp)$`)
@@ -298,6 +299,7 @@ func surveyByUserID(ctx context.Context, store surveyStore, userID string) (*meS
 		id        string
 		instagram pgtype.Text
 		linkedin  pgtype.Text
+		approved  pgtype.Timestamptz
 		answers   []byte
 		entry     meSurveyEntry
 	)
@@ -311,7 +313,8 @@ func surveyByUserID(ctx context.Context, store surveyStore, userID string) (*meS
 			instagram_handle,
 			linkedin,
 			answers,
-			submitted_at
+			submitted_at,
+			approved_at
 		from surveys
 		where user_id=$1`,
 		userID,
@@ -323,6 +326,7 @@ func surveyByUserID(ctx context.Context, store surveyStore, userID string) (*meS
 		&linkedin,
 		&answers,
 		&entry.SubmittedAt,
+		&approved,
 	)
 	if err != nil {
 		return nil, "", err
@@ -330,6 +334,10 @@ func surveyByUserID(ctx context.Context, store surveyStore, userID string) (*meS
 
 	entry.InstagramHandle = textPtr(instagram)
 	entry.Linkedin = textPtr(linkedin)
+	if approved.Valid {
+		t := approved.Time
+		entry.ApprovedAt = &t
+	}
 	if len(answers) == 0 {
 		answers = []byte(`{}`)
 	}

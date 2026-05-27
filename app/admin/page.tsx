@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { requireAdmin } from "@/lib/auth";
 import { getAllSurveys, type AdminSurvey } from "@/lib/data/admin";
 import { GoApiConnectionError, GoApiError } from "@/lib/go-client";
-import { DeleteRow } from "./DeleteRow";
+import { RowActions } from "./RowActions";
 
 export const metadata = {
   title: "Admin — Class of 2026",
@@ -55,6 +55,7 @@ function AdminTable({ surveys }: { surveys: AdminSurvey[] }) {
             <th className="px-4 py-3">Display name</th>
             <th className="px-4 py-3">Email</th>
             <th className="px-4 py-3">Submitted</th>
+            <th className="px-4 py-3">Status</th>
             <th className="px-4 py-3">Flags</th>
             <th className="px-4 py-3 text-right">Actions</th>
           </tr>
@@ -82,6 +83,18 @@ function AdminTable({ surveys }: { surveys: AdminSurvey[] }) {
               <td className="px-4 py-3 whitespace-nowrap text-zinc-600 dark:text-zinc-400">
                 {dateFormatter.format(new Date(survey.submitted_at))}
               </td>
+              <td className="px-4 py-3 whitespace-nowrap text-xs">
+                {survey.approved_at ? (
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+                    Approved on{" "}
+                    {dateFormatter.format(new Date(survey.approved_at))}
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                    Pending
+                  </span>
+                )}
+              </td>
               <td className="px-4 py-3 text-xs">
                 {survey.hide_socials ? (
                   <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
@@ -92,7 +105,11 @@ function AdminTable({ surveys }: { surveys: AdminSurvey[] }) {
                 )}
               </td>
               <td className="px-4 py-3 text-right">
-                <DeleteRow id={survey.id} displayName={survey.display_name} />
+                <RowActions
+                  id={survey.id}
+                  displayName={survey.display_name}
+                  approved={survey.approved_at !== null}
+                />
               </td>
             </tr>
           ))}

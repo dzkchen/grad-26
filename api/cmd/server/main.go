@@ -73,6 +73,8 @@ func main() {
 	r.Post("/upload/url", handlers.UploadURL(r2Client))
 	r.Post("/survey", handlers.CreateSurvey(dbpool, r2Client))
 	r.Get("/admin/surveys", handlers.AdminListSurveys(dbpool, publicHost, isAdmin))
+	r.Post("/admin/surveys/{id}/approve", handlers.AdminApproveSurvey(dbpool, isAdmin))
+	r.Post("/admin/surveys/{id}/unapprove", handlers.AdminUnapproveSurvey(dbpool, isAdmin))
 	r.Delete("/admin/surveys/{id}", handlers.AdminDeleteSurvey(dbpool, r2Client, isAdmin))
 
 	srv := &http.Server{

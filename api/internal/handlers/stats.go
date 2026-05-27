@@ -56,7 +56,7 @@ func StatsAggregates(store statsStore) http.HandlerFunc {
 		}
 
 		var total int
-		if err := store.QueryRow(r.Context(), `select count(*) from surveys`).Scan(&total); err != nil {
+		if err := store.QueryRow(r.Context(), `select count(*) from surveys where approved_at is not null`).Scan(&total); err != nil {
 			writeError(w, http.StatusInternalServerError, "internal_error", "could not count surveys")
 			return
 		}
@@ -69,7 +69,7 @@ func StatsAggregates(store statsStore) http.HandlerFunc {
 			return
 		}
 
-		rows, err := store.Query(r.Context(), `select answers from surveys`)
+		rows, err := store.Query(r.Context(), `select answers from surveys where approved_at is not null`)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal_error", "could not read surveys")
 			return

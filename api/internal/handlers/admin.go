@@ -27,14 +27,15 @@ type objectDeleter interface {
 }
 
 type adminSurvey struct {
-	ID              string    `json:"id"`
-	UserEmail       string    `json:"user_email"`
-	DisplayName     string    `json:"display_name"`
-	PhotoURL        string    `json:"photo_url"`
-	InstagramHandle string    `json:"instagram_handle,omitempty"`
-	Linkedin        string    `json:"linkedin,omitempty"`
-	HideSocials     bool      `json:"hide_socials"`
-	SubmittedAt     time.Time `json:"submitted_at"`
+	ID              string     `json:"id"`
+	UserEmail       string     `json:"user_email"`
+	DisplayName     string     `json:"display_name"`
+	PhotoURL        string     `json:"photo_url"`
+	InstagramHandle string     `json:"instagram_handle,omitempty"`
+	Linkedin        string     `json:"linkedin,omitempty"`
+	HideSocials     bool       `json:"hide_socials"`
+	SubmittedAt     time.Time  `json:"submitted_at"`
+	ApprovedAt      *time.Time `json:"approved_at"`
 }
 
 type adminListResponse struct {
@@ -60,10 +61,11 @@ func AdminListSurveys(store adminStore, publicHost string, isAdmin auth.IsAdmin)
 				s.instagram_handle,
 				s.linkedin,
 				s.hide_socials,
-				s.submitted_at
+				s.submitted_at,
+				s.approved_at
 			from surveys s
 			join users u on u.id = s.user_id
-			order by s.submitted_at desc, s.id desc`,
+			order by (s.approved_at is not null), s.submitted_at desc, s.id desc`,
 		)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal_error", "could not list surveys")
@@ -78,6 +80,7 @@ func AdminListSurveys(store adminStore, publicHost string, isAdmin auth.IsAdmin)
 				photoKey  string
 				instagram pgtype.Text
 				linkedin  sql.NullString
+				approved  pgtype.Timestamptz
 			)
 			if err := rows.Scan(
 				&row.ID,
@@ -88,6 +91,7 @@ func AdminListSurveys(store adminStore, publicHost string, isAdmin auth.IsAdmin)
 				&linkedin,
 				&row.HideSocials,
 				&row.SubmittedAt,
+				&approved,
 			); err != nil {
 				writeError(w, http.StatusInternalServerError, "internal_error", "could not scan survey row")
 				return
@@ -99,6 +103,10 @@ func AdminListSurveys(store adminStore, publicHost string, isAdmin auth.IsAdmin)
 			if linkedin.Valid {
 				row.Linkedin = linkedin.String
 			}
+			if approved.Valid {
+				t := approved.Time
+				row.ApprovedAt = &t
+			}
 			surveys = append(surveys, row)
 		}
 		if err := rows.Err(); err != nil {
@@ -108,6 +116,95 @@ func AdminListSurveys(store adminStore, publicHost string, isAdmin auth.IsAdmin)
 
 		writeJSON(w, http.StatusOK, adminListResponse{Surveys: surveys})
 	}
+}
+
+// AdminApproveSurvey implements POST /admin/surveys/{id}/approve per
+// planning/API_SPEC.md §4.8. It preserves an existing approved_at timestamp
+// when the row is already approved.
+func AdminApproveSurvey(store adminStore, isAdmin auth.IsAdmin) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !requireAdminEmail(w, r, isAdmin) {
+			return
+		}
+
+		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid_request", "id must be a uuid")
+			return
+		}
+
+		var updatedID string
+		err = store.QueryRow(
+			r.Context(),
+			`update surveys
+			set approved_at = now()
+			where id=$1 and approved_at is null
+			returning id::text`,
+			id.String(),
+		).Scan(&updatedID)
+		if err == nil {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		if !errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusInternalServerError, "internal_error", "could not approve survey")
+			return
+		}
+
+		exists, err := surveyExists(r.Context(), store, id.String())
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "internal_error", "could not check survey")
+			return
+		}
+		if !exists {
+			writeError(w, http.StatusNotFound, "not_found", "survey not found")
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// AdminUnapproveSurvey implements POST /admin/surveys/{id}/unapprove per
+// planning/API_SPEC.md §4.9.
+func AdminUnapproveSurvey(store adminStore, isAdmin auth.IsAdmin) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !requireAdminEmail(w, r, isAdmin) {
+			return
+		}
+
+		id, err := uuid.Parse(chi.URLParam(r, "id"))
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid_request", "id must be a uuid")
+			return
+		}
+
+		var updatedID string
+		err = store.QueryRow(
+			r.Context(),
+			`update surveys
+			set approved_at = null
+			where id=$1
+			returning id::text`,
+			id.String(),
+		).Scan(&updatedID)
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "not_found", "survey not found")
+			return
+		}
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "internal_error", "could not unapprove survey")
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func surveyExists(ctx context.Context, store adminStore, id string) (bool, error) {
+	var exists bool
+	err := store.QueryRow(ctx, `select exists(select 1 from surveys where id=$1)`, id).Scan(&exists)
+	return exists, err
 }
 
 // AdminDeleteSurvey implements DELETE /admin/surveys/{id} per planning/API_SPEC.md §4.7.

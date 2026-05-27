@@ -14,8 +14,9 @@ async function ThanksContent() {
         You&apos;re in.
       </h1>
       <p className="mt-4 text-zinc-600 dark:text-zinc-400">
-        Your Class of 2026 profile has been saved. Directory and stats pages are
-        coming next.
+        Thanks! Your submission is awaiting admin approval. You&apos;ll appear
+        on the directory and in stats once it&apos;s approved. There&apos;s
+        nothing else you need to do.
       </p>
       <Link
         href="/directory"
