@@ -27,6 +27,12 @@ func main() {
 		logger.Warn("INTERNAL_API_SECRET is empty; HMAC verification will reject all signed requests")
 	}
 
+	adminEmails := os.Getenv("ADMIN_EMAILS")
+	if adminEmails == "" {
+		logger.Warn("ADMIN_EMAILS is empty; /admin/* endpoints will 403 every caller")
+	}
+	isAdmin := auth.NewIsAdmin(adminEmails)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -66,6 +72,8 @@ func main() {
 	r.Get("/stats/aggregates", handlers.StatsAggregates(dbpool))
 	r.Post("/upload/url", handlers.UploadURL(r2Client))
 	r.Post("/survey", handlers.CreateSurvey(dbpool, r2Client))
+	r.Get("/admin/surveys", handlers.AdminListSurveys(dbpool, publicHost, isAdmin))
+	r.Delete("/admin/surveys/{id}", handlers.AdminDeleteSurvey(dbpool, r2Client, isAdmin))
 
 	srv := &http.Server{
 		Addr:              ":" + port,
