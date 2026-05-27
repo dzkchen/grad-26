@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { requireUser } from "@/lib/auth";
 
@@ -6,24 +5,22 @@ async function ThanksContent() {
   await requireUser();
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-16">
-      <p className="text-sm font-medium text-green-700 dark:text-green-400">
-        Survey submitted
-      </p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-        You&apos;re in.
-      </h1>
-      <p className="mt-4 text-zinc-600 dark:text-zinc-400">
-        Thanks! Your submission is awaiting admin approval. You&apos;ll appear
-        on the directory and in stats once it&apos;s approved. There&apos;s
-        nothing else you need to do.
-      </p>
-      <Link
-        href="/directory"
-        className="mt-8 inline-flex rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
-      >
-        Go to directory
-      </Link>
+    <div className="jf-survey-form-outer">
+      <div className="jf-survey-form-card">
+        <section className="jf-survey-success is-active">
+          <div className="jf-survey-success-icon" aria-hidden="true">
+            🎓
+          </div>
+          <h1 className="jf-survey-success-title">Information is submitted!</h1>
+          <p className="jf-survey-success-sub">Class of 26&apos;</p>
+          <p className="jf-survey-success-desc">
+            May take up to one day to show on the directory and stats page!
+          </p>
+          <a href="/directory" className="jf-survey-btn-next">
+            View Directory →
+          </a>
+        </section>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,40 @@
 import type { Question } from "@/content/survey-questions";
+import { ScaleSlider } from "@/components/survey/ScaleSlider";
 
 type NumberQuestion = Extract<Question, { type: "number" }>;
+
+const SLIDERIZED_NUMBERS: Record<
+  string,
+  {
+    step: number;
+    defaultValue: number;
+    minLabel: string;
+    maxLabel: string;
+    formatValue: (value: number) => string;
+  }
+> = {
+  avg_sleep: {
+    step: 0.5,
+    defaultValue: 7.5,
+    minLabel: "3h",
+    maxLabel: "12h",
+    formatValue: (value) => `${value.toFixed(1)}h`,
+  },
+  study_hours: {
+    step: 1,
+    defaultValue: 20,
+    minLabel: "0h",
+    maxLabel: "40h",
+    formatValue: (value) => `${value.toFixed(0)}h`,
+  },
+  screen_time: {
+    step: 0.5,
+    defaultValue: 7.5,
+    minLabel: "1h",
+    maxLabel: "14h",
+    formatValue: (value) => `${value.toFixed(1)}h`,
+  },
+};
 
 export function NumberInput({
   question,
@@ -12,12 +46,28 @@ export function NumberInput({
   error?: string;
 }) {
   const id = `answer-${question.id}`;
+  const sliderConfig = SLIDERIZED_NUMBERS[question.id];
+
+  if (sliderConfig) {
+    return (
+      <ScaleSlider
+        question={question}
+        name={name}
+        error={error}
+        min={question.min}
+        max={question.max}
+        step={sliderConfig.step}
+        defaultValue={sliderConfig.defaultValue}
+        minLabel={sliderConfig.minLabel}
+        maxLabel={sliderConfig.maxLabel}
+        formatValue={sliderConfig.formatValue}
+      />
+    );
+  }
 
   return (
-    <div className="space-y-2">
-      <label htmlFor={id} className="block text-sm font-medium">
-        {question.label}
-      </label>
+    <div className="jf-survey-field">
+      <label htmlFor={id}>{question.label}</label>
       <input
         id={id}
         name={name}
@@ -27,10 +77,9 @@ export function NumberInput({
         step="any"
         aria-invalid={error ? "true" : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
-        className="w-full rounded-md border border-black/10 bg-transparent px-3 py-2 text-sm outline-none transition focus:border-black/40 dark:border-white/15 dark:focus:border-white/50"
       />
       {error ? (
-        <p id={`${id}-error`} className="text-sm text-red-600">
+        <p id={`${id}-error`} className="jf-survey-error">
           {error}
         </p>
       ) : null}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -25,6 +25,7 @@ export function PhotoUpload({
 }) {
   const [status, setStatus] = useState<PhotoStatus>({ kind: "idle" });
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     return () => {
@@ -60,15 +61,40 @@ export function PhotoUpload({
     setStatus({ kind: "selected", name: file.name });
   }
 
+  function clearPhoto() {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+    onFileSelected(null);
+    setStatus({ kind: "idle" });
+  }
+
   const visibleError = status.kind === "error" ? status.message : error;
 
   return (
-    <div className="space-y-3">
-      <div className="space-y-2">
-        <label htmlFor="survey-photo" className="block text-sm font-medium">
-          Photo
+    <div className="jf-survey-photo-field">
+      <span className="jf-survey-label">Photo</span>
+      <div className="jf-survey-photo-frame">
+        <label
+          htmlFor="survey-photo"
+          className={`jf-survey-photo-uploader${previewUrl ? " has-image" : ""}`}
+          aria-disabled={isUploading || disabled}
+        >
+          {previewUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={previewUrl} alt="Selected survey photo preview" />
+          ) : null}
+          <span className="jf-survey-photo-icon" aria-hidden="true">
+            +
+          </span>
+          <span className="jf-survey-photo-text">Add Photo</span>
         </label>
         <input
+          ref={inputRef}
           id="survey-photo"
           type="file"
           accept={ALLOWED_TYPES.join(",")}
@@ -79,37 +105,33 @@ export function PhotoUpload({
             const file = event.target.files?.[0];
             if (file) handleFile(file);
           }}
-          className="block w-full text-sm file:mr-4 file:rounded-md file:border-0 file:bg-black file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-zinc-800 disabled:opacity-60 dark:file:bg-white dark:file:text-black dark:hover:file:bg-zinc-200"
+          className="jf-survey-photo-input"
         />
+        {previewUrl ? (
+          <button
+            type="button"
+            className="jf-survey-photo-remove"
+            aria-label="Remove photo"
+            onClick={clearPhoto}
+            disabled={isUploading || disabled}
+          >
+            x
+          </button>
+        ) : null}
         <input type="hidden" name="photo_key" value={value} />
       </div>
 
-      {previewUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={previewUrl}
-          alt="Selected survey photo preview"
-          className="aspect-square w-32 rounded-md border border-black/10 object-cover dark:border-white/15"
-        />
-      ) : null}
-
-      <div aria-live="polite" className="text-sm">
+      <div aria-live="polite" className="jf-survey-photo-status">
         {isUploading ? <span>Uploading photo...</span> : null}
-        {!isUploading && value ? (
-          <span className="text-green-700 dark:text-green-400">
-            Photo uploaded for this submission.
-          </span>
-        ) : null}
+        {!isUploading && value ? <span>Photo uploaded for this submission.</span> : null}
         {!isUploading && !value && status.kind === "idle" ? (
-          <span className="text-zinc-500">JPEG, PNG, or WebP. Max 5 MB.</span>
+          <span>JPEG, PNG, or WebP. Max 5 MB.</span>
         ) : null}
         {!isUploading && !value && status.kind === "selected" ? (
-          <span className="text-zinc-600 dark:text-zinc-400">
-            {status.name} will upload when you submit.
-          </span>
+          <span>{status.name} will upload when you submit.</span>
         ) : null}
         {visibleError ? (
-          <p id="survey-photo-error" className="whitespace-pre-wrap text-red-600">
+          <p id="survey-photo-error" className="jf-survey-error">
             {visibleError}
           </p>
         ) : null}

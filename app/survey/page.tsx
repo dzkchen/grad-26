@@ -190,20 +190,7 @@ async function SurveyContent() {
     );
   }
 
-  return (
-    <div className="mx-auto max-w-3xl px-4 py-12">
-      <div className="mb-8">
-        <p className="text-sm font-medium text-zinc-500">Senior survey</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-          Submit your Class of 2026 profile
-        </h1>
-        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-          Upload your photo and answer as many survey questions as you want.
-        </p>
-      </div>
-      <SurveyForm defaultDisplayName={user.name ?? ""} />
-    </div>
-  );
+  return <SurveyForm defaultDisplayName={user.name ?? ""} />;
 }
 
 export default function SurveyPage() {

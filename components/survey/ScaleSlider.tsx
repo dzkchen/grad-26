@@ -3,52 +3,63 @@
 import { useState } from "react";
 import type { Question } from "@/content/survey-questions";
 
-type ScaleQuestion = Extract<Question, { type: "scale_1_10" }>;
+type SliderQuestion = Extract<Question, { type: "scale_1_10" | "number" }>;
 
 export function ScaleSlider({
   question,
   name,
   error,
+  min = question.type === "number" ? (question.min ?? 0) : 1,
+  max = question.type === "number" ? (question.max ?? 100) : 10,
+  step = 1,
+  defaultValue = question.type === "scale_1_10" ? 5 : min,
+  minLabel = String(min),
+  maxLabel = String(max),
+  formatValue = (value: number) => String(value),
 }: {
-  question: ScaleQuestion;
+  question: SliderQuestion;
   name: string;
   error?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  defaultValue?: number;
+  minLabel?: string;
+  maxLabel?: string;
+  formatValue?: (value: number) => string;
 }) {
   const id = `answer-${question.id}`;
-  const [value, setValue] = useState(5);
+  const [value, setValue] = useState(defaultValue);
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-4">
-        <label htmlFor={id} className="block text-sm font-medium">
-          {question.label}
-        </label>
-        <output
-          htmlFor={id}
-          className="min-w-8 rounded-md border border-black/10 px-2 py-1 text-center text-sm font-medium dark:border-white/15"
-        >
-          {value}
-        </output>
-      </div>
-      <input
-        id={id}
-        name={name}
-        type="range"
-        min={1}
-        max={10}
-        step={1}
-        value={value}
-        onChange={(event) => setValue(Number(event.target.value))}
-        aria-invalid={error ? "true" : undefined}
-        aria-describedby={error ? `${id}-error` : undefined}
-        className="w-full accent-black dark:accent-white"
-      />
-      <div className="flex justify-between text-xs text-zinc-500">
-        <span>1</span>
-        <span>10</span>
+    <div className="jf-survey-field">
+      <label htmlFor={id}>{question.label}</label>
+      <div className="jf-survey-slider-wrap">
+        <div className="jf-survey-slider-row">
+          <input
+            id={id}
+            name={name}
+            type="range"
+            min={min}
+            max={max}
+            step={step}
+            value={value}
+            onChange={(event) => setValue(Number(event.target.value))}
+            aria-invalid={error ? "true" : undefined}
+            aria-describedby={error ? `${id}-error` : undefined}
+            className="jf-survey-slider-input"
+          />
+          <output htmlFor={id} className="jf-survey-slider-value">
+            {formatValue(value)}
+          </output>
+        </div>
+        <div className="jf-survey-slider-labels">
+          <span>{minLabel}</span>
+          <span>{maxLabel}</span>
+        </div>
       </div>
       {error ? (
-        <p id={`${id}-error`} className="text-sm text-red-600">
+        <p id={`${id}-error`} className="jf-survey-error">
           {error}
         </p>
       ) : null}
