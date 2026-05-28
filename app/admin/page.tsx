@@ -1,7 +1,8 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Suspense } from "react";
 import { requireAdmin } from "@/lib/auth";
-import { getAllSurveys, type AdminSurvey } from "@/lib/data/admin";
+import { getSurveys, ADMIN_PAGE_SIZE, type AdminSurvey } from "@/lib/data/admin";
 import { GoApiConnectionError, GoApiError } from "@/lib/go-client";
 import { RowActions } from "./RowActions";
 
@@ -70,6 +71,7 @@ function AdminTable({ surveys }: { surveys: AdminSurvey[] }) {
                     alt={`${survey.display_name} photo`}
                     width={56}
                     height={56}
+                    loading="lazy"
                     className="aspect-square w-14 rounded-md object-cover"
                   />
                 ) : (
@@ -115,17 +117,61 @@ function AdminTable({ surveys }: { surveys: AdminSurvey[] }) {
   );
 }
 
-async function AdminContent() {
+function Pagination({
+  page,
+  total,
+  pageSize,
+}: {
+  page: number;
+  total: number;
+  pageSize: number;
+}) {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  if (totalPages <= 1) return null;
+
+  const linkClass =
+    "rounded-md border border-black/10 px-3 py-1.5 text-sm font-medium transition-colors hover:bg-zinc-100 dark:border-white/15 dark:hover:bg-zinc-800 disabled:opacity-40";
+  const disabledClass =
+    "rounded-md border border-black/10 px-3 py-1.5 text-sm font-medium opacity-40 cursor-not-allowed dark:border-white/15";
+
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-zinc-500">
+        Page {page} of {totalPages}
+      </span>
+      <div className="flex gap-2">
+        {page > 1 ? (
+          <Link href={`?page=${page - 1}`} className={linkClass}>
+            Previous
+          </Link>
+        ) : (
+          <span className={disabledClass}>Previous</span>
+        )}
+        {page < totalPages ? (
+          <Link href={`?page=${page + 1}`} className={linkClass}>
+            Next
+          </Link>
+        ) : (
+          <span className={disabledClass}>Next</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+async function AdminContent({ page }: { page: number }) {
   const admin = await requireAdmin();
 
-  let surveys: AdminSurvey[];
+  let result: { surveys: AdminSurvey[]; total: number };
   try {
-    surveys = await getAllSurveys(admin);
+    result = await getSurveys(admin, page);
   } catch (e) {
     if (e instanceof GoApiConnectionError) return <AdminConnectionError error={e} />;
     if (e instanceof GoApiError) return <AdminApiError error={e} />;
     throw e;
   }
+
+  const { surveys, total } = result;
 
   return (
     <div className="space-y-6">
@@ -135,25 +181,35 @@ async function AdminContent() {
           Submissions
         </h1>
         <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-          {surveys.length} {surveys.length === 1 ? "submission" : "submissions"}.
+          {total} {total === 1 ? "submission" : "submissions"}.
           Deleting a row removes the DB record and the R2 photo and cannot be
           undone.
         </p>
       </header>
       <AdminTable surveys={surveys} />
+      <Pagination page={page} total={total} pageSize={ADMIN_PAGE_SIZE} />
     </div>
   );
 }
 
-export default function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const { page: pageParam = "1" } = await searchParams;
+  const pageStr = Array.isArray(pageParam) ? pageParam[0] : pageParam;
+  const page = Math.max(1, parseInt(pageStr, 10) || 1);
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
       <Suspense
+        key={page}
         fallback={
           <div className="text-sm text-zinc-500">Loading submissions…</div>
         }
       >
-        <AdminContent />
+        <AdminContent page={page} />
       </Suspense>
     </div>
   );

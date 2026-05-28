@@ -1,6 +1,5 @@
 "use server";
 
-import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { QUESTIONS } from "@/content/survey-questions";
 import { requireUser } from "@/lib/auth";
@@ -92,7 +91,5 @@ export async function submitSurvey(
     throw e;
   }
 
-  updateTag("directory");
-  updateTag("stats");
   redirect("/survey/thanks");
 }

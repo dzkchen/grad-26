@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/dzkchen/grad-26/api/internal/auth"
@@ -42,14 +43,35 @@ type adminSurvey struct {
 
 type adminListResponse struct {
 	Surveys []adminSurvey `json:"surveys"`
+	Total   int           `json:"total"`
 }
 
+const adminDefaultLimit = 25
+const adminMaxLimit = 100
+
 // AdminListSurveys implements GET /admin/surveys per planning/API_SPEC.md §4.6.
-// No pagination — the class is small. Includes hidden fields so the admin sees
-// everything (incl. hide_socials).
+// Accepts optional ?limit=N&offset=N query params for pagination (default 25 per page).
 func AdminListSurveys(store adminStore, publicHost string, isAdmin auth.IsAdmin) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !requireAdminEmail(w, r, isAdmin) {
+			return
+		}
+
+		limit := adminDefaultLimit
+		if l, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil && l > 0 {
+			if l > adminMaxLimit {
+				l = adminMaxLimit
+			}
+			limit = l
+		}
+		offset := 0
+		if o, err := strconv.Atoi(r.URL.Query().Get("offset")); err == nil && o >= 0 {
+			offset = o
+		}
+
+		var total int
+		if err := store.QueryRow(r.Context(), `select count(*) from surveys`).Scan(&total); err != nil {
+			writeError(w, http.StatusInternalServerError, "internal_error", "could not count surveys")
 			return
 		}
 
@@ -68,7 +90,9 @@ func AdminListSurveys(store adminStore, publicHost string, isAdmin auth.IsAdmin)
 				s.approved_at
 			from surveys s
 			join users u on u.id = s.user_id
-			order by (s.approved_at is not null), s.submitted_at desc, s.id desc`,
+			order by (s.approved_at is not null), s.submitted_at desc, s.id desc
+			limit $1 offset $2`,
+			limit, offset,
 		)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "internal_error", "could not list surveys")
@@ -123,7 +147,7 @@ func AdminListSurveys(store adminStore, publicHost string, isAdmin auth.IsAdmin)
 			return
 		}
 
-		writeJSON(w, http.StatusOK, adminListResponse{Surveys: surveys})
+		writeJSON(w, http.StatusOK, adminListResponse{Surveys: surveys, Total: total})
 	}
 }
 

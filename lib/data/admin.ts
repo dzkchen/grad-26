@@ -16,17 +16,30 @@ export type AdminSurvey = {
   approved_at: string | null;
 };
 
+export type AdminSurveyPage = {
+  surveys: AdminSurvey[];
+  total: number;
+};
+
 type GoAdminListResponse = {
   surveys: AdminSurvey[];
+  total: number;
 };
+
+export const ADMIN_PAGE_SIZE = 25;
 
 // No `'use cache'` here: admin always wants live data so a freshly-deleted row
 // disappears on the next render without waiting on tag invalidation.
-export async function getAllSurveys(admin: AuthUser): Promise<AdminSurvey[]> {
+export async function getSurveys(
+  admin: AuthUser,
+  page: number,
+  pageSize: number = ADMIN_PAGE_SIZE,
+): Promise<AdminSurveyPage> {
+  const offset = (page - 1) * pageSize;
   const data = await goClient.get<GoAdminListResponse>(
     "/admin/surveys",
-    undefined,
+    { limit: pageSize, offset },
     { callerEmail: admin.email },
   );
-  return data.surveys;
+  return { surveys: data.surveys, total: data.total };
 }
