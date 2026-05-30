@@ -1,27 +1,37 @@
+import Image from "next/image";
 import { signIn } from "@/lib/auth";
 
 export default function SignInPage() {
   return (
-    <div className="mx-auto max-w-md px-6 py-24">
-      <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
-      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-        This site is for the John Fraser Class of 2026. Sign in with your{" "}
-        <span className="font-mono">@pdsb.net</span> Google account.
-      </p>
-      <form
-        className="mt-8"
-        action={async () => {
-          "use server";
-          await signIn("google", { redirectTo: "/" });
-        }}
-      >
-        <button
-          type="submit"
-          className="inline-flex h-11 items-center justify-center rounded-md border border-black/10 bg-white px-5 text-sm font-medium text-black shadow-sm hover:bg-zinc-50 dark:border-white/15 dark:bg-zinc-900 dark:text-white dark:hover:bg-zinc-800"
-        >
-          Continue with Google
-        </button>
-      </form>
+    <div className="jf-home">
+      <section className="jf-hero">
+        <div className="jf-hero-bg" aria-hidden />
+        <div className="jf-hero-content">
+          <div className="jf-hero-tag">
+            <Image src="/logo.png" alt="" width={18} height={18} priority />
+            John Fraser Secondary School
+          </div>
+          <div className="jf-hero-big">
+            SIGN
+            <br />
+            <span className="jf-yr">IN</span>
+          </div>
+          <p className="jf-hero-tagline">
+            Use your @pdsb.net Google account.
+          </p>
+          <form
+            className="jf-hero-actions"
+            action={async () => {
+              "use server";
+              await signIn("google", { redirectTo: "/" });
+            }}
+          >
+            <button type="submit" className="jf-btn-white">
+              Continue with Google →
+            </button>
+          </form>
+        </div>
+      </section>
     </div>
   );
 }
