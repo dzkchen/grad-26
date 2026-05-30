@@ -159,7 +159,15 @@ function Pagination({
   );
 }
 
-async function AdminContent({ page }: { page: number }) {
+async function AdminContent({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const { page: pageParam = "1" } = await searchParams;
+  const pageStr = Array.isArray(pageParam) ? pageParam[0] : pageParam;
+  const page = Math.max(1, parseInt(pageStr, 10) || 1);
+
   const admin = await requireAdmin();
 
   let result: { surveys: AdminSurvey[]; total: number };
@@ -192,24 +200,19 @@ async function AdminContent({ page }: { page: number }) {
   );
 }
 
-export default async function AdminPage({
+export default function AdminPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { page: pageParam = "1" } = await searchParams;
-  const pageStr = Array.isArray(pageParam) ? pageParam[0] : pageParam;
-  const page = Math.max(1, parseInt(pageStr, 10) || 1);
-
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
       <Suspense
-        key={page}
         fallback={
           <div className="text-sm text-zinc-500">Loading submissions…</div>
         }
       >
-        <AdminContent page={page} />
+        <AdminContent searchParams={searchParams} />
       </Suspense>
     </div>
   );
