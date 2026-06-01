@@ -241,39 +241,6 @@ func TestComputeAggregates_RealQuestionSchema(t *testing.T) {
 	}
 }
 
-// --- parseStatsMin ------------------------------------------------------------
-
-func TestParseStatsMin(t *testing.T) {
-	tests := []struct {
-		raw     string
-		want    int
-		wantErr bool
-	}{
-		{"", defaultStatsMin, false},
-		{"1", 1, false},
-		{"5", 5, false},
-		{"42", 42, false},
-		{"0", 0, true},
-		{"-1", 0, true},
-		{"abc", 0, true},
-	}
-	for _, tc := range tests {
-		got, err := parseStatsMin(tc.raw)
-		if tc.wantErr {
-			if err == nil {
-				t.Errorf("parseStatsMin(%q) = %d, want error", tc.raw, got)
-			}
-			continue
-		}
-		if err != nil {
-			t.Errorf("parseStatsMin(%q) error: %v", tc.raw, err)
-		}
-		if got != tc.want {
-			t.Errorf("parseStatsMin(%q) = %d, want %d", tc.raw, got, tc.want)
-		}
-	}
-}
-
 // --- Handler tests ------------------------------------------------------------
 
 // fakeStatsStore implements statsStore over an in-memory slice of answers blobs.
@@ -453,7 +420,7 @@ func TestStatsAggregates_AboveMinReturnsAggregates(t *testing.T) {
 	}
 }
 
-func TestStatsAggregates_MinOverrideUnlocksUnderFloor(t *testing.T) {
+func TestStatsAggregates_MinQueryDoesNotOverrideFloor(t *testing.T) {
 	store := &fakeStatsStore{answers: seedFinalGradeAnswers(t, 1, "80-89")}
 	h := StatsAggregates(store)
 
@@ -471,31 +438,8 @@ func TestStatsAggregates_MinOverrideUnlocksUnderFloor(t *testing.T) {
 	if resp.TotalSubmissions != 1 {
 		t.Fatalf("total_submissions = %d, want 1", resp.TotalSubmissions)
 	}
-	if len(resp.Aggregates) == 0 {
-		t.Fatalf("aggregates empty under ?min=1 override")
-	}
-}
-
-func TestStatsAggregates_InvalidMin(t *testing.T) {
-	store := &fakeStatsStore{answers: seedFinalGradeAnswers(t, 10, "80-89")}
-	h := StatsAggregates(store)
-
-	for _, raw := range []string{"0", "-3", "abc"} {
-		req := httptest.NewRequest("GET", "/stats/aggregates?min="+raw, nil)
-		rec := httptest.NewRecorder()
-		h(rec, req)
-		if rec.Code != http.StatusBadRequest {
-			t.Fatalf("min=%s: status = %d, want 400", raw, rec.Code)
-		}
-		var env struct {
-			Error struct {
-				Code string `json:"code"`
-			} `json:"error"`
-		}
-		_ = json.Unmarshal(rec.Body.Bytes(), &env)
-		if env.Error.Code != "invalid_request" {
-			t.Fatalf("min=%s: error code = %s", raw, env.Error.Code)
-		}
+	if len(resp.Aggregates) != 0 {
+		t.Fatalf("aggregates unlocked under ignored ?min=1 override: %v", resp.Aggregates)
 	}
 }
 

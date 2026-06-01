@@ -6,7 +6,6 @@ import (
 	"math"
 	"net/http"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/dzkchen/grad-26/api/internal/questions"
@@ -56,24 +55,16 @@ type textAggregate struct {
 // StatsAggregates implements GET /stats/aggregates per planning/API_SPEC.md §4.5.
 //
 // The de-anonymization floor (default 5) suppresses per-row reads when the
-// class hasn't crossed it. The `?min=` override is used by the Next.js
-// /dev/stats preview to render charts off a single test submission; do not
-// call with a lowered min from production paths.
+// class hasn't crossed it.
 func StatsAggregates(store statsStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		min, err := parseStatsMin(r.URL.Query().Get("min"))
-		if err != nil {
-			writeError(w, http.StatusBadRequest, "invalid_request", err.Error())
-			return
-		}
-
 		var total int
 		if err := store.QueryRow(r.Context(), `select count(*) from surveys where approved_at is not null`).Scan(&total); err != nil {
 			writeError(w, http.StatusInternalServerError, "internal_error", "could not count surveys")
 			return
 		}
 
-		if total < min {
+		if total < defaultStatsMin {
 			writeJSON(w, http.StatusOK, statsResponse{
 				TotalSubmissions: total,
 				Aggregates:       map[string]any{},
@@ -118,26 +109,6 @@ func StatsAggregates(store statsStore) http.HandlerFunc {
 		})
 	}
 }
-
-func parseStatsMin(raw string) (int, error) {
-	if raw == "" {
-		return defaultStatsMin, nil
-	}
-	min, err := strconv.Atoi(raw)
-	if err != nil {
-		return 0, errInvalidMin
-	}
-	if min < 1 {
-		return 0, errInvalidMin
-	}
-	return min, nil
-}
-
-var errInvalidMin = &statsParamError{msg: "min must be an integer >= 1"}
-
-type statsParamError struct{ msg string }
-
-func (e *statsParamError) Error() string { return e.msg }
 
 // computeAggregates is the pure aggregation function — given the canonical
 // question schema and a slice of parsed answers (one map per row), produce

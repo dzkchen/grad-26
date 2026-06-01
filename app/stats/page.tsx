@@ -6,6 +6,6 @@ export const metadata = {
 };
 
 export default async function StatsPage() {
-  const data = await getStatsAggregates(1);
+  const data = await getStatsAggregates();
   return <StatsView data={data} />;
 }

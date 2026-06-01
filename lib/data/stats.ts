@@ -32,11 +32,9 @@ export type StatsAggregates = {
 };
 
 // getStatsAggregates wraps the Go /stats/aggregates endpoint behind the
-// Cache Components cache. The `min` argument is the de-anonymization floor;
-// production callers must use the default (5). The /dev/stats preview page
-// passes min=1 so charts render off a single test submission.
-export async function getStatsAggregates(min?: number): Promise<StatsAggregates> {
+// Cache Components cache. The Go API owns the de-anonymization floor.
+export async function getStatsAggregates(): Promise<StatsAggregates> {
   cacheLife("hours");
   cacheTag("stats");
-  return goClient.get<StatsAggregates>("/stats/aggregates", { min });
+  return goClient.get<StatsAggregates>("/stats/aggregates");
 }
