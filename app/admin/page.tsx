@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { requireAdmin } from "@/lib/auth";
 import { getSurveys, ADMIN_PAGE_SIZE, type AdminSurvey } from "@/lib/data/admin";
 import { GoApiConnectionError, GoApiError } from "@/lib/go-client";
+import { AdminTableSkeleton } from "@/components/loading";
 import { RowActions } from "./RowActions";
 
 export const metadata = {
@@ -207,11 +208,7 @@ export default function AdminPage({
 }) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
-      <Suspense
-        fallback={
-          <div className="text-sm text-zinc-500">Loading submissions…</div>
-        }
-      >
+      <Suspense fallback={<AdminTableSkeleton />}>
         <AdminContent searchParams={searchParams} />
       </Suspense>
     </div>

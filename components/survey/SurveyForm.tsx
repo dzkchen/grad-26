@@ -19,6 +19,7 @@ import {
   validateSurveyFields,
   type SubmitSurveyState,
 } from "@/app/survey/actions";
+import { SlowLoadingHint, Spinner } from "@/components/loading";
 import { LongText } from "@/components/survey/LongText";
 import { MultiChoice } from "@/components/survey/MultiChoice";
 import { NumberInput } from "@/components/survey/NumberInput";
@@ -38,9 +39,13 @@ function SubmitButton({
     <button
       type="submit"
       disabled={pending || disabled}
+      aria-busy={pending}
       className="jf-survey-btn-submit"
     >
-      {pending ? "Submitting..." : "Submit survey"}
+      <span className="jf-load-more" style={{ justifyContent: "center" }}>
+        {pending ? <Spinner label="Submitting" /> : null}
+        {pending ? "Submitting…" : "Submit survey"}
+      </span>
     </button>
   );
 }
@@ -1278,6 +1283,18 @@ export function SurveyForm({
             </button>
             <SubmitButton disabled={false} pending={isPending || isUploadingPhoto} />
           </div>
+          {isPending || isUploadingPhoto ? (
+            <div className="jf-survey-photo-status" style={{ marginTop: 8 }}>
+              <SlowLoadingHint
+                delayMs={5000}
+                message={
+                  isUploadingPhoto
+                    ? "Still uploading your photo… large files take longer."
+                    : "Still submitting… hang tight."
+                }
+              />
+            </div>
+          ) : null}
         </WizardStep>
       </form>
     </div>

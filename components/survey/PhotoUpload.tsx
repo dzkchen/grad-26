@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { SlowLoadingHint, Spinner } from "@/components/loading";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -83,6 +84,7 @@ export function PhotoUpload({
           htmlFor="survey-photo"
           className={`jf-survey-photo-uploader${previewUrl ? " has-image" : ""}`}
           aria-disabled={isUploading || disabled}
+          aria-busy={isUploading}
         >
           {previewUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -92,6 +94,25 @@ export function PhotoUpload({
             +
           </span>
           <span className="jf-survey-photo-text">Add Photo</span>
+          {isUploading ? (
+            <span
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "rgba(13,27,75,0.55)",
+                color: "var(--jf-white)",
+                fontSize: 22,
+                backdropFilter: "blur(2px)",
+                WebkitBackdropFilter: "blur(2px)",
+              }}
+            >
+              <Spinner label="Uploading photo" />
+            </span>
+          ) : null}
         </label>
         <input
           ref={inputRef}
@@ -122,7 +143,18 @@ export function PhotoUpload({
       </div>
 
       <div aria-live="polite" className="jf-survey-photo-status">
-        {isUploading ? <span>Uploading photo...</span> : null}
+        {isUploading ? (
+          <>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <Spinner label="Uploading" />
+              Uploading photo…
+            </span>
+            <SlowLoadingHint
+              delayMs={6000}
+              message="Still uploading… large photos can take a while."
+            />
+          </>
+        ) : null}
         {!isUploading && value ? <span>Photo uploaded for this submission.</span> : null}
         {!isUploading && !value && status.kind === "idle" ? (
           <span>JPEG, PNG, or WebP. Max 5 MB.</span>

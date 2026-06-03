@@ -11,6 +11,7 @@ import {
   type CSSProperties,
 } from "react";
 import type { DirectoryEntry, DirectoryPage } from "@/lib/data/directory";
+import { SlowLoadingHint, Spinner } from "@/components/loading";
 
 const ROTATIONS = [
   "-2deg",
@@ -274,10 +275,17 @@ export function DirectoryClient({
               type="button"
               onClick={loadMore}
               disabled={isLoadingMore}
-              className="cursor-pointer rounded-full border-[1.5px] border-[rgba(30,111,217,0.2)] bg-white px-6 py-2.5 text-sm font-medium tracking-[0.04em] text-[var(--jf-navy)] shadow-[0_2px_8px_rgba(13,27,75,0.06)] transition hover:border-[var(--jf-navy)] hover:bg-[var(--jf-navy)] hover:text-white disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-[rgba(30,111,217,0.2)] disabled:hover:bg-white disabled:hover:text-[var(--jf-navy)]"
+              aria-busy={isLoadingMore}
+              className="cursor-pointer rounded-full border-[1.5px] border-[rgba(30,111,217,0.2)] bg-white px-6 py-2.5 text-sm font-medium tracking-[0.04em] text-[var(--jf-navy)] shadow-[0_2px_8px_rgba(13,27,75,0.06)] transition hover:border-[var(--jf-navy)] hover:bg-[var(--jf-navy)] hover:text-white disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:border-[rgba(30,111,217,0.2)] disabled:hover:bg-white disabled:hover:text-[var(--jf-navy)]"
             >
-              {isLoadingMore ? "Loading…" : "Load more"}
+              <span className="jf-load-more">
+                {isLoadingMore ? <Spinner label="Loading more" /> : null}
+                {isLoadingMore ? "Loading more…" : "Load more"}
+              </span>
             </button>
+            {isLoadingMore ? (
+              <SlowLoadingHint message="Still loading… your connection might be slow." />
+            ) : null}
             {loadError ? (
               <p className="text-sm text-red-600">{loadError}</p>
             ) : null}

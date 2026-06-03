@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { requireUser, type AuthUser } from "@/lib/auth";
 import { GoApiConnectionError, GoApiError, goClient } from "@/lib/go-client";
+import { SurveyFormSkeleton } from "@/components/loading";
 import { SurveyForm } from "@/components/survey/SurveyForm";
 
 type SurveyEntry = {
@@ -93,13 +94,7 @@ async function SurveyContent() {
 
 export default function SurveyPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="mx-auto max-w-3xl px-4 py-12 text-sm text-zinc-500">
-          Loading survey...
-        </div>
-      }
-    >
+    <Suspense fallback={<SurveyFormSkeleton />}>
       <SurveyContent />
     </Suspense>
   );
