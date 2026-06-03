@@ -58,7 +58,7 @@ export default function AboutPage() {
                 alt="David Chen, creator of Fraser Grads '26"
                 fill
                 sizes="(max-width: 900px) calc(100vw - 80px), 300px"
-                priority
+                preload
                 className={styles.photoImage}
               />
             </div>

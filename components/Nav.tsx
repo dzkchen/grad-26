@@ -13,7 +13,7 @@ const PUBLIC_LINKS = [
 function Brand() {
   return (
     <Link href="/" className="jf-nav-logo">
-      <Image src="/logo.png" alt="Fraser '26" width={36} height={36} priority />
+      <Image src="/logo.png" alt="Fraser '26" width={36} height={36} />
       <span>Fraser &apos;26</span>
     </Link>
   );

@@ -350,7 +350,10 @@ body {
   inset: 0;
   z-index: 0;
   transform: scale(1.04);
-  background: url("/hero-bg.png") center center / cover no-repeat;
+}
+.jf-hero-bg-image {
+  object-fit: cover;
+  object-position: center center;
 }
 .jf-hero-bg::after {
   content: "";

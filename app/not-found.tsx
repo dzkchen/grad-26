@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { HeroBackground } from "@/components/HeroBackground";
 
 export default function NotFound() {
   return (
     <div className="jf-home">
       <section className="jf-hero">
-        <div className="jf-hero-bg" aria-hidden />
+        <HeroBackground />
         <div className="jf-hero-content">
           <div className="jf-hero-tag">John Fraser Secondary School</div>
           <div className="jf-hero-big">
