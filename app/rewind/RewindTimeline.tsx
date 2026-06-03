@@ -113,9 +113,6 @@ export function RewindTimeline({
       {/* PAGE HEADER */}
       <header className="relative z-10 flex flex-wrap items-end justify-between gap-8 px-13 pt-16 pb-14">
         <div>
-          <p className="mb-2 text-[11px] font-bold tracking-[0.2em] text-[rgba(13,27,75,0.4)] uppercase">
-            SOME CURATED MEMORIES :)
-          </p>
           <h1
             className="font-display leading-[0.88] tracking-[0.02em] text-jf-navy"
             style={{ fontSize: "clamp(64px, 10vw, 128px)" }}
