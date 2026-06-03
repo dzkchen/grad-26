@@ -40,13 +40,16 @@ export function NumberInput({
   question,
   name,
   error,
+  defaultValue,
 }: {
   question: NumberQuestion;
   name: string;
   error?: string;
+  defaultValue?: string;
 }) {
   const id = `answer-${question.id}`;
   const sliderConfig = SLIDERIZED_NUMBERS[question.id];
+  const parsedDefaultValue = numberDefault(defaultValue);
 
   if (sliderConfig) {
     return (
@@ -57,7 +60,7 @@ export function NumberInput({
         min={question.min}
         max={question.max}
         step={sliderConfig.step}
-        defaultValue={sliderConfig.defaultValue}
+        defaultValue={parsedDefaultValue ?? sliderConfig.defaultValue}
         minLabel={sliderConfig.minLabel}
         maxLabel={sliderConfig.maxLabel}
         formatValue={sliderConfig.formatValue}
@@ -75,6 +78,7 @@ export function NumberInput({
         min={question.min}
         max={question.max}
         step="any"
+        defaultValue={defaultValue}
         aria-invalid={error ? "true" : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
       />
@@ -85,4 +89,10 @@ export function NumberInput({
       ) : null}
     </div>
   );
+}
+
+function numberDefault(value?: string) {
+  if (value === undefined || value.trim() === "") return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }

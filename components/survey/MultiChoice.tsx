@@ -6,12 +6,15 @@ export function MultiChoice({
   question,
   name,
   error,
+  defaultValues = [],
 }: {
   question: MultiChoiceQuestion;
   name: string;
   error?: string;
+  defaultValues?: string[];
 }) {
   const id = `answer-${question.id}`;
+  const selectedValues = new Set(defaultValues);
 
   return (
     <fieldset
@@ -33,6 +36,7 @@ export function MultiChoice({
                 name={name}
                 type="checkbox"
                 value={choice}
+                defaultChecked={selectedValues.has(choice)}
                 className="size-4 rounded accent-black dark:accent-white"
               />
               <span>{choice}</span>

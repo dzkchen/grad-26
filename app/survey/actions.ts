@@ -12,6 +12,8 @@ export type SubmitSurveyState = {
   fieldErrors?: Record<string, string[]>;
 } | null;
 
+const SurveyPreflightSchema = SurveyFormSchema.omit({ photo_key: true });
+
 function formDataToSurveyInput(formData: FormData) {
   const answers: Record<string, FormDataEntryValue | string[]> = {};
 
@@ -48,6 +50,27 @@ function fieldErrors(error: z.ZodError): Record<string, string[]> {
   return errors;
 }
 
+function validationErrorState(error: z.ZodError): SubmitSurveyState {
+  return {
+    error: "Please fix the highlighted fields.",
+    fieldErrors: fieldErrors(error),
+  };
+}
+
+export async function validateSurveyFields(
+  _prev: SubmitSurveyState,
+  formData: FormData,
+): Promise<SubmitSurveyState> {
+  await requireUser();
+  const parsed = SurveyPreflightSchema.safeParse(formDataToSurveyInput(formData));
+
+  if (!parsed.success) {
+    return validationErrorState(parsed.error);
+  }
+
+  return null;
+}
+
 export async function submitSurvey(
   _prev: SubmitSurveyState,
   formData: FormData,
@@ -56,10 +79,7 @@ export async function submitSurvey(
   const parsed = SurveyFormSchema.safeParse(formDataToSurveyInput(formData));
 
   if (!parsed.success) {
-    return {
-      error: "Please fix the highlighted fields.",
-      fieldErrors: fieldErrors(parsed.error),
-    };
+    return validationErrorState(parsed.error);
   }
 
   try {

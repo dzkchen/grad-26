@@ -14,7 +14,11 @@ import collegePrograms from "@/content/collegeprograms.json";
 import { QUESTIONS, type Question } from "@/content/survey-questions";
 import universities from "@/content/universities.json";
 import universityPrograms from "@/content/universityprograms.json";
-import { submitSurvey, type SubmitSurveyState } from "@/app/survey/actions";
+import {
+  submitSurvey,
+  validateSurveyFields,
+  type SubmitSurveyState,
+} from "@/app/survey/actions";
 import { LongText } from "@/components/survey/LongText";
 import { MultiChoice } from "@/components/survey/MultiChoice";
 import { NumberInput } from "@/components/survey/NumberInput";
@@ -121,11 +125,13 @@ function SchoolWorkplaceInput({
   name,
   error,
   whatsNext,
+  defaultValue,
 }: {
   question: Extract<Question, { type: "short_text" }>;
   name: string;
   error?: string;
   whatsNext: string;
+  defaultValue?: string;
 }) {
   const id = `answer-${question.id}`;
   const list =
@@ -136,7 +142,14 @@ function SchoolWorkplaceInput({
         : null;
 
   if (!list) {
-    return <ShortText question={question} name={name} error={error} />;
+    return (
+      <ShortText
+        question={question}
+        name={name}
+        error={error}
+        defaultValue={defaultValue}
+      />
+    );
   }
 
   return (
@@ -148,6 +161,7 @@ function SchoolWorkplaceInput({
         type="text"
         list={list.id}
         maxLength={question.maxLength}
+        defaultValue={defaultValue}
         aria-invalid={error ? "true" : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
       />
@@ -170,11 +184,13 @@ function ProgramMajorInput({
   name,
   error,
   whatsNext,
+  defaultValue,
 }: {
   question: Extract<Question, { type: "short_text" }>;
   name: string;
   error?: string;
   whatsNext: string;
+  defaultValue?: string;
 }) {
   const id = `answer-${question.id}`;
   const list =
@@ -185,7 +201,14 @@ function ProgramMajorInput({
         : null;
 
   if (!list) {
-    return <ShortText question={question} name={name} error={error} />;
+    return (
+      <ShortText
+        question={question}
+        name={name}
+        error={error}
+        defaultValue={defaultValue}
+      />
+    );
   }
 
   return (
@@ -197,6 +220,7 @@ function ProgramMajorInput({
         type="text"
         list={list.id}
         maxLength={question.maxLength}
+        defaultValue={defaultValue}
         aria-invalid={error ? "true" : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
       />
@@ -214,24 +238,64 @@ function ProgramMajorInput({
   );
 }
 
+type FieldValues = Record<string, string[]>;
+const UNRESTORABLE_FIELD_NAMES = new Set(["photo_key"]);
+
+function fieldValuesFromFormData(formData: FormData): FieldValues {
+  const values: FieldValues = {};
+
+  for (const [name, value] of formData.entries()) {
+    if (name.startsWith("$ACTION_")) continue;
+    if (UNRESTORABLE_FIELD_NAMES.has(name)) continue;
+    if (typeof value !== "string") continue;
+
+    values[name] ??= [];
+    values[name].push(value);
+  }
+
+  return values;
+}
+
+function firstFieldValue(values: FieldValues, name: string) {
+  return values[name]?.[0] ?? "";
+}
+
+function allFieldValues(values: FieldValues, name: string) {
+  return values[name] ?? [];
+}
+
+function numericDefault(value: string) {
+  if (value.trim() === "") return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 function QuestionInput({
   question,
   error,
   whatsNext,
+  fieldValues,
+  restoreVersion,
 }: {
   question: Question;
   error?: string;
   whatsNext: string;
+  fieldValues: FieldValues;
+  restoreVersion: number;
 }) {
   const name = `answers.${question.id}`;
+  const defaultValue = firstFieldValue(fieldValues, name);
+  const fieldKey = `${restoreVersion}-${name}`;
 
   if (question.id === "school_workplace" && question.type === "short_text") {
     return (
       <SchoolWorkplaceInput
+        key={fieldKey}
         question={question}
         name={name}
         error={error}
         whatsNext={whatsNext}
+        defaultValue={defaultValue}
       />
     );
   }
@@ -239,27 +303,77 @@ function QuestionInput({
   if (question.id === "program_major" && question.type === "short_text") {
     return (
       <ProgramMajorInput
+        key={fieldKey}
         question={question}
         name={name}
         error={error}
         whatsNext={whatsNext}
+        defaultValue={defaultValue}
       />
     );
   }
 
   switch (question.type) {
     case "short_text":
-      return <ShortText question={question} name={name} error={error} />;
+      return (
+        <ShortText
+          key={fieldKey}
+          question={question}
+          name={name}
+          error={error}
+          defaultValue={defaultValue}
+        />
+      );
     case "long_text":
-      return <LongText question={question} name={name} error={error} />;
+      return (
+        <LongText
+          key={fieldKey}
+          question={question}
+          name={name}
+          error={error}
+          defaultValue={defaultValue}
+        />
+      );
     case "number":
-      return <NumberInput question={question} name={name} error={error} />;
+      return (
+        <NumberInput
+          key={fieldKey}
+          question={question}
+          name={name}
+          error={error}
+          defaultValue={defaultValue}
+        />
+      );
     case "scale_1_10":
-      return <ScaleSlider question={question} name={name} error={error} />;
+      return (
+        <ScaleSlider
+          key={fieldKey}
+          question={question}
+          name={name}
+          error={error}
+          defaultValue={numericDefault(defaultValue)}
+        />
+      );
     case "single_choice":
-      return <SingleChoice question={question} name={name} error={error} />;
+      return (
+        <SingleChoice
+          key={fieldKey}
+          question={question}
+          name={name}
+          error={error}
+          defaultValue={defaultValue}
+        />
+      );
     case "multi_choice":
-      return <MultiChoice question={question} name={name} error={error} />;
+      return (
+        <MultiChoice
+          key={fieldKey}
+          question={question}
+          name={name}
+          error={error}
+          defaultValues={allFieldValues(fieldValues, name)}
+        />
+      );
   }
 }
 
@@ -618,8 +732,45 @@ export function SurveyForm({
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [whatsNext, setWhatsNext] = useState("");
+  const [restoredValues, setRestoredValues] = useState<FieldValues>({});
+  const [restoreVersion, setRestoreVersion] = useState(0);
   const [reviewFormData, setReviewFormData] = useState<FormData | null>(null);
   const [submitted, setSubmitted] = useState(false);
+
+  function rememberSubmittedValues(
+    formData: FormData,
+    fieldErrors?: Record<string, string[]>,
+  ) {
+    const nextValues = fieldValuesFromFormData(formData);
+    setRestoredValues(nextValues);
+    setRestoreVersion((version) => version + 1);
+    setWhatsNext(firstFieldValue(nextValues, "answers.whats_next"));
+    if (!fieldErrors || Object.keys(fieldErrors).length === 0) {
+      setReviewFormData(formData);
+    }
+  }
+
+  function handleSubmissionError(
+    result: Exclude<SubmitSurveyState, null>,
+    formData: FormData,
+  ) {
+    rememberSubmittedValues(formData, result.fieldErrors);
+
+    if (result.fieldErrors?.photo_key) {
+      setPhotoKey("");
+    }
+
+    const targetStep = earliestErrorStep(result.fieldErrors);
+    if (targetStep) {
+      setStep(targetStep);
+      scrollToTop();
+    } else if (result.error) {
+      scrollToTop();
+    }
+
+    return result;
+  }
+
   const [state, formAction, isPending] = useActionState(
     async (
       prev: SubmitSurveyState,
@@ -628,30 +779,41 @@ export function SurveyForm({
       formData.set("display_name", fullDisplayName(firstName, lastName));
 
       let key = photoKey;
+      const selectedPhotoFile = photoFile;
 
       if (!key) {
-        if (!photoFile) {
-          setStep(1);
-          scrollToTop();
-          return {
+        if (!selectedPhotoFile) {
+          return handleSubmissionError({
             error: "Please fix the highlighted fields.",
             fieldErrors: { photo_key: ["Photo is required."] },
-          };
+          }, formData);
+        }
+      }
+
+      const preflight = await validateSurveyFields(prev, formData);
+      if (preflight) {
+        return handleSubmissionError(preflight, formData);
+      }
+
+      if (!key) {
+        if (!selectedPhotoFile) {
+          return handleSubmissionError({
+            error: "Please fix the highlighted fields.",
+            fieldErrors: { photo_key: ["Photo is required."] },
+          }, formData);
         }
 
         setIsUploadingPhoto(true);
         try {
-          key = await uploadPhotoOnSubmit(photoFile);
+          key = await uploadPhotoOnSubmit(selectedPhotoFile);
           setPhotoKey(key);
         } catch (e) {
-          setStep(1);
-          scrollToTop();
-          return {
+          return handleSubmissionError({
             error: "Photo upload failed.",
             fieldErrors: {
               photo_key: [e instanceof Error ? e.message : String(e)],
             },
-          };
+          }, formData);
         } finally {
           setIsUploadingPhoto(false);
         }
@@ -659,14 +821,11 @@ export function SurveyForm({
 
       formData.set("photo_key", key);
       const result = await submitSurvey(prev, formData);
-      const targetStep = earliestErrorStep(result?.fieldErrors);
-      if (targetStep) {
-        setStep(targetStep);
-        scrollToTop();
+      if (result) {
+        return handleSubmissionError(result, formData);
       }
-      if (!result?.error && !result?.fieldErrors) {
-        setSubmitted(true);
-      }
+
+      setSubmitted(true);
       return result;
     },
     null,
@@ -796,6 +955,8 @@ export function SurveyForm({
               question={question("senior_quote")}
               error={firstError(state, "answers.senior_quote")}
               whatsNext={whatsNext}
+              fieldValues={restoredValues}
+              restoreVersion={restoreVersion}
             />
 
             <div className="jf-survey-divider" />
@@ -804,6 +965,8 @@ export function SurveyForm({
               question={question("pronouns")}
               error={firstError(state, "answers.pronouns")}
               whatsNext={whatsNext}
+              fieldValues={restoredValues}
+              restoreVersion={restoreVersion}
             />
 
             <div className="jf-survey-divider" />
@@ -812,12 +975,14 @@ export function SurveyForm({
               <div className="jf-survey-field">
                 <label htmlFor="instagram_handle">Instagram handle</label>
                 <input
+                  key={`${restoreVersion}-instagram_handle`}
                   id="instagram_handle"
                   name="instagram_handle"
                   type="text"
                   maxLength={60}
                   placeholder="@yourhandle"
                   autoComplete="off"
+                  defaultValue={firstFieldValue(restoredValues, "instagram_handle")}
                   aria-invalid={
                     firstError(state, "instagram_handle") ? "true" : undefined
                   }
@@ -839,12 +1004,14 @@ export function SurveyForm({
               <div className="jf-survey-field">
                 <label htmlFor="linkedin">LinkedIn handle</label>
                 <input
+                  key={`${restoreVersion}-linkedin`}
                   id="linkedin"
                   name="linkedin"
                   type="text"
                   maxLength={200}
                   placeholder="linkedin.com/in/you"
                   autoComplete="off"
+                  defaultValue={firstFieldValue(restoredValues, "linkedin")}
                   aria-invalid={firstError(state, "linkedin") ? "true" : undefined}
                   aria-describedby={
                     firstError(state, "linkedin") ? "linkedin-error" : undefined
@@ -883,11 +1050,15 @@ export function SurveyForm({
               question={question("top_courses")}
               error={firstError(state, "answers.top_courses")}
               whatsNext={whatsNext}
+              fieldValues={restoredValues}
+              restoreVersion={restoreVersion}
             />
             <QuestionInput
               question={question("hardest_course")}
               error={firstError(state, "answers.hardest_course")}
               whatsNext={whatsNext}
+              fieldValues={restoredValues}
+              restoreVersion={restoreVersion}
             />
 
             <div className="jf-survey-field-row">
@@ -895,11 +1066,15 @@ export function SurveyForm({
                 question={question("specialized_program")}
                 error={firstError(state, "answers.specialized_program")}
                 whatsNext={whatsNext}
+                fieldValues={restoredValues}
+                restoreVersion={restoreVersion}
               />
               <QuestionInput
                 question={question("final_grade_bucket")}
                 error={firstError(state, "answers.final_grade_bucket")}
                 whatsNext={whatsNext}
+                fieldValues={restoredValues}
+                restoreVersion={restoreVersion}
               />
             </div>
 
@@ -909,21 +1084,29 @@ export function SurveyForm({
               question={question("avg_sleep")}
               error={firstError(state, "answers.avg_sleep")}
               whatsNext={whatsNext}
+              fieldValues={restoredValues}
+              restoreVersion={restoreVersion}
             />
             <QuestionInput
               question={question("study_hours")}
               error={firstError(state, "answers.study_hours")}
               whatsNext={whatsNext}
+              fieldValues={restoredValues}
+              restoreVersion={restoreVersion}
             />
             <QuestionInput
               question={question("stress")}
               error={firstError(state, "answers.stress")}
               whatsNext={whatsNext}
+              fieldValues={restoredValues}
+              restoreVersion={restoreVersion}
             />
             <QuestionInput
               question={question("screen_time")}
               error={firstError(state, "answers.screen_time")}
               whatsNext={whatsNext}
+              fieldValues={restoredValues}
+              restoreVersion={restoreVersion}
             />
           </div>
 
@@ -955,16 +1138,22 @@ export function SurveyForm({
               question={question("class_defined")}
               error={firstError(state, "answers.class_defined")}
               whatsNext={whatsNext}
+              fieldValues={restoredValues}
+              restoreVersion={restoreVersion}
             />
             <QuestionInput
               question={question("miss_most")}
               error={firstError(state, "answers.miss_most")}
               whatsNext={whatsNext}
+              fieldValues={restoredValues}
+              restoreVersion={restoreVersion}
             />
             <QuestionInput
               question={question("relive_event")}
               error={firstError(state, "answers.relive_event")}
               whatsNext={whatsNext}
+              fieldValues={restoredValues}
+              restoreVersion={restoreVersion}
             />
 
             <div className="jf-survey-divider" />
@@ -973,6 +1162,8 @@ export function SurveyForm({
               question={question("advice_grade9")}
               error={firstError(state, "answers.advice_grade9")}
               whatsNext={whatsNext}
+              fieldValues={restoredValues}
+              restoreVersion={restoreVersion}
             />
           </div>
 
@@ -1006,6 +1197,8 @@ export function SurveyForm({
               question={question("whats_next")}
               error={firstError(state, "answers.whats_next")}
               whatsNext={whatsNext}
+              fieldValues={restoredValues}
+              restoreVersion={restoreVersion}
             />
 
             <div className="jf-survey-field-row">
@@ -1013,11 +1206,15 @@ export function SurveyForm({
                 question={question("school_workplace")}
                 error={firstError(state, "answers.school_workplace")}
                 whatsNext={whatsNext}
+                fieldValues={restoredValues}
+                restoreVersion={restoreVersion}
               />
               <QuestionInput
                 question={question("program_major")}
                 error={firstError(state, "answers.program_major")}
                 whatsNext={whatsNext}
+                fieldValues={restoredValues}
+                restoreVersion={restoreVersion}
               />
             </div>
 
@@ -1027,11 +1224,15 @@ export function SurveyForm({
               question={question("excited_for")}
               error={firstError(state, "answers.excited_for")}
               whatsNext={whatsNext}
+              fieldValues={restoredValues}
+              restoreVersion={restoreVersion}
             />
             <QuestionInput
               question={question("ten_years")}
               error={firstError(state, "answers.ten_years")}
               whatsNext={whatsNext}
+              fieldValues={restoredValues}
+              restoreVersion={restoreVersion}
             />
           </div>
 

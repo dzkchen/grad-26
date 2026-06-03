@@ -6,10 +6,12 @@ export function SingleChoice({
   question,
   name,
   error,
+  defaultValue,
 }: {
   question: SingleChoiceQuestion;
   name: string;
   error?: string;
+  defaultValue?: string;
 }) {
   const id = `answer-${question.id}`;
 
@@ -32,6 +34,7 @@ export function SingleChoice({
                 name={name}
                 type="radio"
                 value={choice}
+                defaultChecked={defaultValue === choice}
                 className="jf-survey-chip-input"
               />
               <span className="jf-survey-option-chip">{choice}</span>

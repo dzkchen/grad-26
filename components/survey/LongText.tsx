@@ -9,13 +9,15 @@ export function LongText({
   question,
   name,
   error,
+  defaultValue = "",
 }: {
   question: LongTextQuestion;
   name: string;
   error?: string;
+  defaultValue?: string;
 }) {
   const id = `answer-${question.id}`;
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(defaultValue.length);
 
   return (
     <div className="jf-survey-field">
@@ -25,6 +27,7 @@ export function LongText({
         name={name}
         maxLength={question.maxLength}
         rows={4}
+        defaultValue={defaultValue}
         onChange={(event) => setCount(event.target.value.length)}
         aria-invalid={error ? "true" : undefined}
         aria-describedby={error ? `${id}-error` : undefined}

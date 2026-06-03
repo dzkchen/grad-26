@@ -6,10 +6,12 @@ export function ShortText({
   question,
   name,
   error,
+  defaultValue,
 }: {
   question: ShortTextQuestion;
   name: string;
   error?: string;
+  defaultValue?: string;
 }) {
   const id = `answer-${question.id}`;
 
@@ -21,6 +23,7 @@ export function ShortText({
         name={name}
         type="text"
         maxLength={question.maxLength}
+        defaultValue={defaultValue}
         aria-invalid={error ? "true" : undefined}
         aria-describedby={error ? `${id}-error` : undefined}
       />
