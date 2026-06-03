@@ -63,24 +63,14 @@ export default function AboutPage() {
               />
             </div>
             <div className={styles.polaroidMeta}>
-              <p className={styles.role}>Developer &amp; Maintainer</p>
               <h2 className={styles.name}>David Chen</h2>
-              <p className={styles.quote}>
-                &quot;This took me way too long...&quot;
-              </p>
             </div>
           </article>
 
           <div className={styles.premisePanel}>
-            <p className={styles.premiseEyebrow}>The premise</p>
-            <h2 className={styles.premiseHeadline}>
-              A way for us to actually <span>stay connected!</span>
-            </h2>
             <div className={styles.premiseCopy}>
               <p>
-                Fraser Grads &apos;26 is an unofficial, student-made project
-                for the Class of &apos;26 where stats, the directory, and other
-                class pieces sit in one place we can come back to over time.
+                Fraser Grads &apos;26 is an unofficial, side project for me to learn something that is actually useful.
               </p>
               <p>
                 The goal is to help us look back on high school after
@@ -89,7 +79,7 @@ export default function AboutPage() {
                 reach out for university application help.
               </p>
               <p>
-                Good luck on your future to all. <strong>Go Jags!</strong>
+                Go Jags!
               </p>
               <p>
                 Special thanks to Arjita and Inesh for helping make the survey
@@ -113,7 +103,7 @@ export default function AboutPage() {
               Contact<span>.</span>
             </h2>
             <p className={styles.contactSub}>
-              Feel free to contact me at any of the options below :)
+              Feel free to contact me :)
             </p>
           </div>
 
