@@ -16,7 +16,6 @@ export default function Home() {
             <br />
             OF <span className="jf-yr">&apos;26</span>
           </div>
-          <p className="jf-hero-tagline">Four years. One site.</p>
           <div className="jf-hero-actions">
             <Link href="/directory" className="jf-btn-white">
               Explore the Class →
@@ -44,7 +43,7 @@ export default function Home() {
       <section className="jf-scattered">
         <p className="jf-scattered-label">What&apos;s inside</p>
         <h2 className="jf-scattered-heading">
-          Four years. <em>One</em> site.
+
         </h2>
 
         <div className="jf-cards">
@@ -109,7 +108,6 @@ export default function Home() {
           <div className="jf-card jf-card-rewind" aria-disabled>
             <div className="jf-rw-inner">
               <div className="jf-rw-top">
-                <div className="jf-rw-eyebrow">Memory Reel</div>
                 <span className="jf-rw-wip">
                   <span className="jf-rw-wip-dot" />
                   In Progress
