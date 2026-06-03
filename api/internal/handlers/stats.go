@@ -19,8 +19,6 @@ type statsStore interface {
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 }
 
-const defaultStatsMin = 5
-
 type statsResponse struct {
 	TotalSubmissions int            `json:"total_submissions"`
 	Aggregates       map[string]any `json:"aggregates"`
@@ -53,9 +51,6 @@ type textAggregate struct {
 }
 
 // StatsAggregates implements GET /stats/aggregates per planning/API_SPEC.md §4.5.
-//
-// The de-anonymization floor (default 5) suppresses per-row reads when the
-// class hasn't crossed it.
 func StatsAggregates(store statsStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var total int
@@ -64,7 +59,7 @@ func StatsAggregates(store statsStore) http.HandlerFunc {
 			return
 		}
 
-		if total < defaultStatsMin {
+		if total == 0 {
 			writeJSON(w, http.StatusOK, statsResponse{
 				TotalSubmissions: total,
 				Aggregates:       map[string]any{},

@@ -322,17 +322,8 @@ func mustJSON(t *testing.T, v any) []byte {
 	return b
 }
 
-func seedFinalGradeAnswers(t *testing.T, n int, choice string) [][]byte {
-	t.Helper()
-	out := make([][]byte, 0, n)
-	for range n {
-		out = append(out, mustJSON(t, map[string]any{"final_grade_bucket": choice}))
-	}
-	return out
-}
-
-func TestStatsAggregates_BelowMinSuppressesAggregates(t *testing.T) {
-	store := &fakeStatsStore{answers: seedFinalGradeAnswers(t, 4, "80-89")}
+func TestStatsAggregates_ZeroSubmissionsReturnsEmptyAggregates(t *testing.T) {
+	store := &fakeStatsStore{}
 	h := StatsAggregates(store)
 
 	req := httptest.NewRequest("GET", "/stats/aggregates", nil)
@@ -346,15 +337,15 @@ func TestStatsAggregates_BelowMinSuppressesAggregates(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if resp.TotalSubmissions != 4 {
-		t.Fatalf("total_submissions = %d, want 4", resp.TotalSubmissions)
+	if resp.TotalSubmissions != 0 {
+		t.Fatalf("total_submissions = %d, want 0", resp.TotalSubmissions)
 	}
 	if len(resp.Aggregates) != 0 {
-		t.Fatalf("aggregates not empty under min: %v", resp.Aggregates)
+		t.Fatalf("aggregates not empty with no submissions: %v", resp.Aggregates)
 	}
 }
 
-func TestStatsAggregates_AboveMinReturnsAggregates(t *testing.T) {
+func TestStatsAggregates_ReturnsAggregates(t *testing.T) {
 	rows := [][]byte{
 		mustJSON(t, map[string]any{"final_grade_bucket": "80-89", "stress": 7, "avg_sleep": 8}),
 		mustJSON(t, map[string]any{"final_grade_bucket": "80-89", "stress": 6, "avg_sleep": 7}),
@@ -420,26 +411,42 @@ func TestStatsAggregates_AboveMinReturnsAggregates(t *testing.T) {
 	}
 }
 
-func TestStatsAggregates_MinQueryDoesNotOverrideFloor(t *testing.T) {
-	store := &fakeStatsStore{answers: seedFinalGradeAnswers(t, 1, "80-89")}
+func TestStatsAggregates_OneSubmissionReturnsAggregates(t *testing.T) {
+	store := &fakeStatsStore{answers: [][]byte{
+		mustJSON(t, map[string]any{"final_grade_bucket": "80-89", "stress": 7, "avg_sleep": 8}),
+	}}
 	h := StatsAggregates(store)
 
-	req := httptest.NewRequest("GET", "/stats/aggregates?min=1", nil)
+	req := httptest.NewRequest("GET", "/stats/aggregates", nil)
 	rec := httptest.NewRecorder()
 	h(rec, req)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d (body: %s)", rec.Code, rec.Body.String())
 	}
-	var resp statsResponse
+	var resp struct {
+		TotalSubmissions int                        `json:"total_submissions"`
+		Aggregates       map[string]json.RawMessage `json:"aggregates"`
+	}
 	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
 	if resp.TotalSubmissions != 1 {
 		t.Fatalf("total_submissions = %d, want 1", resp.TotalSubmissions)
 	}
-	if len(resp.Aggregates) != 0 {
-		t.Fatalf("aggregates unlocked under ignored ?min=1 override: %v", resp.Aggregates)
+	var fgb choiceAggregate
+	if err := json.Unmarshal(resp.Aggregates["final_grade_bucket"], &fgb); err != nil {
+		t.Fatalf("decode final_grade_bucket: %v", err)
+	}
+	if fgb.Choices["80-89"] != 1 {
+		t.Fatalf("final_grade_bucket 80-89 count = %d, want 1", fgb.Choices["80-89"])
+	}
+	var stress numericAggregate
+	if err := json.Unmarshal(resp.Aggregates["stress"], &stress); err != nil {
+		t.Fatalf("decode stress: %v", err)
+	}
+	if stress.Count != 1 || stress.Mean != 7 {
+		t.Fatalf("stress aggregate = %+v, want count=1 mean=7", stress)
 	}
 }
 
