@@ -227,7 +227,7 @@ export function DirectoryClient({
         {filtered.length === 0 ? (
           <p className="py-20 text-center text-lg font-light italic text-[rgba(13,27,75,0.5)]">
             {entries.length === 0
-              ? "No one's signed up yet. Be the first to fill out the survey 🎓"
+              ? "No Data, Possible Error Please Contact David!"
               : "No one found… yet! 🎓"}
           </p>
         ) : (
