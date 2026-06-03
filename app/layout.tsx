@@ -23,7 +23,10 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Class of 2026 — John Fraser SS",
   description: "Grad site for John Fraser SS Class of 2026.",
 };

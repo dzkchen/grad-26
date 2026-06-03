@@ -9,6 +9,7 @@ import { RowActions } from "./RowActions";
 
 export const metadata = {
   title: "Admin — Class of 2026",
+  description: "Internal admin tools for the Class of 2026 grad site.",
 };
 
 const dateFormatter = new Intl.DateTimeFormat("en-CA", {

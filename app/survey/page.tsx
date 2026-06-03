@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { requireUser, type AuthUser } from "@/lib/auth";
 import { GoApiConnectionError, GoApiError, goClient } from "@/lib/go-client";
 import { SurveyFormSkeleton } from "@/components/loading";
 import { SurveyForm } from "@/components/survey/SurveyForm";
+
+export const metadata: Metadata = {
+  title: "Senior Survey — Class of 2026",
+  description:
+    "Add your voice to the John Fraser SS Class of 2026 — answer the senior survey and appear in the class directory.",
+};
 
 type SurveyEntry = {
   display_name: string;

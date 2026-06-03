@@ -3,6 +3,8 @@ import { StatsView } from "@/components/stats/StatsView";
 
 export const metadata = {
   title: "Stats — Class of 2026",
+  description:
+    "Aggregated senior-survey results for the John Fraser SS Class of 2026 — the class by the numbers.",
 };
 
 export default async function StatsPage() {
