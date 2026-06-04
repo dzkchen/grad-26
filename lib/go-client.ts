@@ -3,11 +3,13 @@ import { createHash, createHmac } from "node:crypto";
 export class GoApiError extends Error {
   readonly code: string;
   readonly status: number;
-  constructor(code: string, message: string, status: number) {
+  readonly details?: string;
+  constructor(code: string, message: string, status: number, details?: string) {
     super(message);
     this.name = "GoApiError";
     this.code = code;
     this.status = status;
+    this.details = details;
   }
 }
 
@@ -114,22 +116,39 @@ async function request<T>(
 
   if (!res.ok) {
     const err = (parsed as { error?: { code?: string; message?: string } })?.error;
-    const fallbackMessage = compactBody(text);
+    if (err?.message) {
+      throw new GoApiError(
+        err.code ?? "non_json_response",
+        err.message,
+        res.status,
+      );
+    }
+    const rawDetails = compactBody(text) || undefined;
+    if (rawDetails) {
+      console.error(
+        `[go-client] ${method} ${path} -> ${res.status} non-JSON body:`,
+        rawDetails,
+      );
+    }
     throw new GoApiError(
       err?.code ?? "non_json_response",
-      err?.message ??
-        (fallbackMessage
-          ? `Go API ${method} ${path} returned ${res.status}: ${fallbackMessage}`
-          : `Go API ${method} ${path} returned ${res.status}`),
+      `Go API ${method} ${path} returned ${res.status}`,
       res.status,
+      rawDetails,
     );
   }
 
   if (text.length > 0 && parsed === undefined) {
+    const rawDetails = compactBody(text) || undefined;
+    console.error(
+      `[go-client] ${method} ${path} -> ${res.status} unexpected non-JSON body:`,
+      rawDetails,
+    );
     throw new GoApiError(
       "invalid_response",
-      `Go API ${method} ${path} returned non-JSON response: ${compactBody(text)}`,
+      `Go API ${method} ${path} returned non-JSON response`,
       res.status,
+      rawDetails,
     );
   }
 

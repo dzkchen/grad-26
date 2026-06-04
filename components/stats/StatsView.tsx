@@ -1,8 +1,6 @@
 import Link from "next/link";
-import {
-  ChoiceDonutChart,
-  type DonutDatum,
-} from "@/components/charts/ChoiceDonutChart";
+import { LazyChoiceDonutChart } from "@/components/charts/LazyChoiceDonutChart";
+import type { DonutDatum } from "@/components/charts/ChoiceDonutChart";
 import type {
   Aggregate,
   ChoiceAggregate,
@@ -282,7 +280,7 @@ function DonutCard({
       <div className="jf-stats-card-title">{cardTitle}</div>
       <div className="jf-stats-donut-wrap">
         <div className="jf-stats-donut-chart">
-          <ChoiceDonutChart data={donutData} ariaLabel={ariaLabel} />
+          <LazyChoiceDonutChart data={donutData} ariaLabel={ariaLabel} />
         </div>
         <div className="jf-stats-donut-legend">
           {entries.map((entry, i) => (
