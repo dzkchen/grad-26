@@ -2,7 +2,12 @@
 
 import { revalidatePath, updateTag } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
-import { goClient, GoApiConnectionError, GoApiError } from "@/lib/go-client";
+import {
+  goClient,
+  GoApiConnectionError,
+  GoApiError,
+  toPublicMessage,
+} from "@/lib/go-client";
 
 export type AdminSurveyActionResult =
   | { ok: true }
@@ -17,7 +22,7 @@ async function runAdminSurveyMutation(
     await mutate(admin.email);
   } catch (e) {
     if (e instanceof GoApiError) {
-      return { ok: false, error: e.message };
+      return { ok: false, error: toPublicMessage(e) };
     }
     if (e instanceof GoApiConnectionError) {
       return {

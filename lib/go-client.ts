@@ -4,8 +4,8 @@ export class GoApiError extends Error {
   readonly code: string;
   readonly status: number;
   readonly details?: string;
-  constructor(code: string, message: string, status: number, details?: string) {
-    super(message);
+  constructor(code: string, status: number, details?: string) {
+    super(sanitizeGoErrorMessage(code, status));
     this.name = "GoApiError";
     this.code = code;
     this.status = status;
@@ -29,6 +29,45 @@ export interface GoClientOpts {
 
 const EMPTY_BODY_SHA256 =
   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
+export function sanitizeGoErrorMessage(code: string, status: number): string {
+  switch (code) {
+    case "invalid_content_type":
+      return "Use a JPEG, PNG, or WebP image.";
+    case "invalid_photo":
+      return "The uploaded photo could not be used. Upload a new photo and try again.";
+    case "invalid_request":
+      return "The request was invalid. Check the submitted data and try again.";
+    case "invalid_size":
+      return "Photo must be between 1 byte and 5 MB.";
+    case "unauthorized":
+      return "You need to sign in before trying again.";
+    case "forbidden":
+      return "You do not have permission to perform this action.";
+    case "conflict":
+      return "This survey has already been submitted.";
+    case "not_found":
+      return "The requested item was not found.";
+    case "invalid_response":
+    case "non_json_response":
+      return "The API returned an invalid response. Try again shortly.";
+    case "internal_error":
+      return "The API could not complete the request. Try again shortly.";
+    default:
+      if (status === 404) return "The requested item was not found.";
+      if (status >= 500) return "The API could not complete the request. Try again shortly.";
+      if (status >= 400) return "The request could not be completed. Check the input and try again.";
+      return "The API request could not be completed. Try again shortly.";
+  }
+}
+
+export function toPublicMessage(error: unknown): string {
+  if (error instanceof GoApiError) return error.message;
+  if (error instanceof GoApiConnectionError) {
+    return "The API is unavailable right now. Try again shortly.";
+  }
+  return "Something went wrong. Try again shortly.";
+}
 
 export function signRequest(
   secret: string,
@@ -116,12 +155,15 @@ async function request<T>(
 
   if (!res.ok) {
     const err = (parsed as { error?: { code?: string; message?: string } })?.error;
-    if (err?.message) {
-      throw new GoApiError(
-        err.code ?? "non_json_response",
-        err.message,
-        res.status,
+    const code = err?.code ?? "non_json_response";
+    const upstreamMessage =
+      typeof err?.message === "string" ? compactBody(err.message) || undefined : undefined;
+    if (upstreamMessage) {
+      console.error(
+        `[go-client] ${method} ${path} -> ${res.status} ${code}:`,
+        upstreamMessage,
       );
+      throw new GoApiError(code, res.status, upstreamMessage);
     }
     const rawDetails = compactBody(text) || undefined;
     if (rawDetails) {
@@ -131,8 +173,7 @@ async function request<T>(
       );
     }
     throw new GoApiError(
-      err?.code ?? "non_json_response",
-      `Go API ${method} ${path} returned ${res.status}`,
+      code,
       res.status,
       rawDetails,
     );
@@ -146,7 +187,6 @@ async function request<T>(
     );
     throw new GoApiError(
       "invalid_response",
-      `Go API ${method} ${path} returned non-JSON response`,
       res.status,
       rawDetails,
     );

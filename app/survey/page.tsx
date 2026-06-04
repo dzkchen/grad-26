@@ -2,7 +2,12 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { requireUser, type AuthUser } from "@/lib/auth";
-import { GoApiConnectionError, GoApiError, goClient } from "@/lib/go-client";
+import {
+  GoApiConnectionError,
+  GoApiError,
+  goClient,
+  toPublicMessage,
+} from "@/lib/go-client";
 import { SurveyFormSkeleton } from "@/components/loading";
 import { SurveyForm } from "@/components/survey/SurveyForm";
 
@@ -71,7 +76,7 @@ function SurveyApiError({ error }: { error: GoApiError }) {
         <p className="mt-3">
           {error.status === 404
             ? "Deploy the latest Go API so `/me/survey` exists, then redeploy or refresh the Vercel preview."
-            : error.message}
+            : toPublicMessage(error)}
         </p>
       </div>
     </div>

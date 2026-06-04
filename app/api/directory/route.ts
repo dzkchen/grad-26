@@ -1,5 +1,5 @@
 import { getDirectoryPage } from "@/lib/data/directory";
-import { GoApiConnectionError, GoApiError } from "@/lib/go-client";
+import { GoApiConnectionError, GoApiError, toPublicMessage } from "@/lib/go-client";
 
 export async function GET(request: Request) {
   const cursor = new URL(request.url).searchParams.get("cursor") ?? undefined;
@@ -10,13 +10,13 @@ export async function GET(request: Request) {
   } catch (e) {
     if (e instanceof GoApiError) {
       return Response.json(
-        { error: { code: e.code, message: e.message } },
+        { error: { code: e.code, message: toPublicMessage(e) } },
         { status: e.status },
       );
     }
     if (e instanceof GoApiConnectionError) {
       return Response.json(
-        { error: { code: "upstream_unavailable", message: e.message } },
+        { error: { code: "upstream_unavailable", message: toPublicMessage(e) } },
         { status: 502 },
       );
     }

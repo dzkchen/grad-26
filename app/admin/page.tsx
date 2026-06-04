@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { requireAdmin } from "@/lib/auth";
 import { getSurveys, ADMIN_PAGE_SIZE, type AdminSurvey } from "@/lib/data/admin";
-import { GoApiConnectionError, GoApiError } from "@/lib/go-client";
+import { GoApiConnectionError, GoApiError, toPublicMessage } from "@/lib/go-client";
 import { AdminTableSkeleton } from "@/components/loading";
 import { RowActions } from "./RowActions";
 
@@ -35,7 +35,7 @@ function AdminApiError({ error }: { error: GoApiError }) {
       <p className="mt-2">
         The Go API responded with {error.status} ({error.code}).
       </p>
-      <p className="mt-2">{error.message}</p>
+      <p className="mt-2">{toPublicMessage(error)}</p>
     </div>
   );
 }

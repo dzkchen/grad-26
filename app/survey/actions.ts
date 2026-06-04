@@ -3,7 +3,12 @@
 import { redirect } from "next/navigation";
 import { QUESTIONS } from "@/content/survey-questions";
 import { requireUser } from "@/lib/auth";
-import { goClient, GoApiConnectionError, GoApiError } from "@/lib/go-client";
+import {
+  goClient,
+  GoApiConnectionError,
+  GoApiError,
+  toPublicMessage,
+} from "@/lib/go-client";
 import { SurveyFormSchema } from "@/lib/schemas";
 import type { z } from "zod";
 
@@ -100,7 +105,7 @@ export async function submitSurvey(
       redirect("/survey/thanks");
     }
     if (e instanceof GoApiError) {
-      return { error: e.message };
+      return { error: toPublicMessage(e) };
     }
     if (e instanceof GoApiConnectionError) {
       return {
