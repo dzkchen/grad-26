@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { DM_Sans, Bebas_Neue, Geist_Mono } from "next/font/google";
 import { Nav, NavFallback } from "@/components/Nav";
 import { Footer } from "@/components/Footer";
+import { CookieConsent } from "@/components/CookieConsent";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -47,6 +48,7 @@ export default function RootLayout({
         </Suspense>
         <main className="flex-1">{children}</main>
         <Footer />
+        <CookieConsent />
       </body>
     </html>
   );

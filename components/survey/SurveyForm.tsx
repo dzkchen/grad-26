@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Fragment,
   useActionState,
@@ -1283,6 +1284,17 @@ export function SurveyForm({
             </button>
             <SubmitButton disabled={false} pending={isPending || isUploadingPhoto} />
           </div>
+          <p className="jf-survey-legal">
+            By submitting, you agree to the{" "}
+            <Link href="/privacy" target="_blank" rel="noopener noreferrer">
+              Privacy Policy
+            </Link>{" "}
+            and{" "}
+            <Link href="/terms" target="_blank" rel="noopener noreferrer">
+              Terms of Service
+            </Link>
+            .
+          </p>
           {isPending || isUploadingPhoto ? (
             <div className="jf-survey-photo-status" style={{ marginTop: 8 }}>
               <SlowLoadingHint
