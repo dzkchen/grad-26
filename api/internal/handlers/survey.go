@@ -22,8 +22,9 @@ type surveyStore interface {
 	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
 }
 
-type objectHeader interface {
+type surveyObjectStore interface {
 	HeadObject(ctx context.Context, key string) (int64, error)
+	DeleteObject(ctx context.Context, key string) error
 }
 
 type createSurveyRequest struct {
@@ -58,7 +59,7 @@ type meSurveyEntry struct {
 
 var surveyPhotoKeyRE = regexp.MustCompile(`^surveys/([0-9a-f-]+)\.(jpg|jpeg|png|webp)$`)
 
-func CreateSurvey(store surveyStore, objects objectHeader) http.HandlerFunc {
+func CreateSurvey(store surveyStore, objects surveyObjectStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		callerEmail := callerEmail(r)
 		if callerEmail == "" {
@@ -113,6 +114,10 @@ func CreateSurvey(store surveyStore, objects objectHeader) http.HandlerFunc {
 			return
 		}
 		if size < 1 || size > maxUploadBytes {
+			if err := objects.DeleteObject(r.Context(), validated.photoKey); err != nil {
+				writeError(w, http.StatusInternalServerError, "internal_error", "could not delete invalid uploaded photo")
+				return
+			}
 			writeError(w, http.StatusBadRequest, "invalid_photo", "uploaded photo must be between 1 byte and 5 MB")
 			return
 		}

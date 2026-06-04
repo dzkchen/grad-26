@@ -65,9 +65,11 @@ func (c *Client) Bucket() string { return c.bucket }
 // Only `host` is bound into the V4 query signature (X-Amz-SignedHeaders=host)
 // — `Content-Type` is set on the request as a header but isn't part of the
 // signed-headers list, and `Content-Length` is intentionally omitted because
-// the SDK signing it produces 400s on browser PUTs. Size enforcement happens
-// server-side: POST /survey HEADs the object and rejects > 5 MB before
-// committing the DB row. contentLength is accepted for API symmetry.
+// the SDK signing it produces 400s on browser PUTs. R2 does not currently
+// support presigned POST policies for browser uploads, so size enforcement
+// happens server-side: POST /survey HEADs the object, deletes invalid-size
+// objects, and rejects them before committing the DB row. contentLength is
+// accepted for API symmetry.
 //
 // The exact signing behavior here is not unit-tested — it's verified by the
 // `cmd/diag-r2` integration tool, which round-trips through real R2. Changes
