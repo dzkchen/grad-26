@@ -35,7 +35,6 @@ type adminSurvey struct {
 	PhotoURL        string          `json:"photo_url"`
 	InstagramHandle string          `json:"instagram_handle,omitempty"`
 	Linkedin        string          `json:"linkedin,omitempty"`
-	HideSocials     bool            `json:"hide_socials"`
 	Answers         json.RawMessage `json:"answers"`
 	SubmittedAt     time.Time       `json:"submitted_at"`
 	ApprovedAt      *time.Time      `json:"approved_at"`
@@ -84,7 +83,6 @@ func AdminListSurveys(store adminStore, publicHost string, isAdmin auth.IsAdmin)
 				s.photo_object_key,
 				s.instagram_handle,
 				s.linkedin,
-				s.hide_socials,
 				s.answers,
 				s.submitted_at,
 				s.approved_at
@@ -117,7 +115,6 @@ func AdminListSurveys(store adminStore, publicHost string, isAdmin auth.IsAdmin)
 				&photoKey,
 				&instagram,
 				&linkedin,
-				&row.HideSocials,
 				&answers,
 				&row.SubmittedAt,
 				&approved,

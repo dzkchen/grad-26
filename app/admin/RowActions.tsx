@@ -156,7 +156,6 @@ function SubmissionDialog({
             value={survey.instagram_handle ? `@${survey.instagram_handle}` : "Not added"}
           />
           <MetaItem label="LinkedIn" value={survey.linkedin ?? "Not added"} />
-          <MetaItem label="Socials hidden" value={survey.hide_socials ? "Yes" : "No"} />
         </dl>
 
         <div className="mt-6 border-t border-black/10 pt-5 dark:border-white/15">

@@ -59,7 +59,6 @@ function AdminTable({ surveys }: { surveys: AdminSurvey[] }) {
             <th className="px-4 py-3">Email</th>
             <th className="px-4 py-3">Submitted</th>
             <th className="px-4 py-3">Status</th>
-            <th className="px-4 py-3">Flags</th>
             <th className="px-4 py-3 text-right">Actions</th>
           </tr>
         </thead>
@@ -97,15 +96,6 @@ function AdminTable({ surveys }: { surveys: AdminSurvey[] }) {
                   <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
                     Pending
                   </span>
-                )}
-              </td>
-              <td className="px-4 py-3 text-xs">
-                {survey.hide_socials ? (
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
-                    socials hidden
-                  </span>
-                ) : (
-                  <span className="text-zinc-400">—</span>
                 )}
               </td>
               <td className="px-4 py-3 text-right">

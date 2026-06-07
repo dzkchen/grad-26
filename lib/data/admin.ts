@@ -10,7 +10,6 @@ export type AdminSurvey = {
   photo_url: string;
   instagram_handle?: string;
   linkedin?: string;
-  hide_socials: boolean;
   answers: Record<string, unknown>;
   submitted_at: string;
   approved_at: string | null;
