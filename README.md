@@ -7,7 +7,7 @@
 ![Postgres](https://img.shields.io/badge/Postgres-Supabase-3FCF8E?logo=supabase&logoColor=white)
 ![Cloudflare R2](https://img.shields.io/badge/Cloudflare-R2-F38020?logo=cloudflare&logoColor=white)
 
-Fraser Grads '26 is an unofficial grad site for John Fraser Secondary School's Class of 2026. It puts the class directory, senior survey, class stats, and future memory/scrapbook features in one place so our grad class can look back after graduation and stay connected. Also a good way for lower grades to reach out or see some stats to know more about senior life!
+Fraser Grads '26 is an unofficial grad site for Fraser's Class of 2026. It puts the class directory, senior survey, class stats, and future memory/scrapbook features in one place so our grad class can look back after graduation and stay connected. Also a good way for lower grades to reach out or see some stats to know more about senior life!
 
 This project was a fun way to make a project that actually matters but allows me to learn (Golang + Docker + etc)
 

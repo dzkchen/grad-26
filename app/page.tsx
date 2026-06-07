@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { HeroBackground } from "@/components/HeroBackground";
 
 export const metadata: Metadata = {
-  title: "Class of 2026 — John Fraser SS",
+  title: "Class of 2026 — Fraser",
   description:
-    "The John Fraser SS Class of 2026 grad site — browse the directory, see class stats, and take the senior survey.",
+    "The Fraser Class of 2026 grad site — browse the directory, see class stats, and take the senior survey.",
 };
 
 export default function Home() {
@@ -15,10 +14,6 @@ export default function Home() {
       <section className="jf-hero">
         <HeroBackground />
         <div className="jf-hero-content">
-          <div className="jf-hero-tag">
-            <Image src="/logo.png" alt="" width={18} height={18} />
-            John Fraser Secondary School
-          </div>
           <div className="jf-hero-big">
             CLASS
             <br />

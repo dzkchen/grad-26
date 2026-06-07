@@ -14,7 +14,7 @@ import { SurveyForm } from "@/components/survey/SurveyForm";
 export const metadata: Metadata = {
   title: "Senior Survey — Class of 2026",
   description:
-    "Add your voice to the John Fraser SS Class of 2026 — answer the senior survey and appear in the class directory.",
+    "Add your voice to the Fraser Class of 2026 — answer the senior survey and appear in the class directory.",
 };
 
 type SurveyEntry = {

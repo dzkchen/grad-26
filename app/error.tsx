@@ -20,7 +20,6 @@ export default function ErrorPage({
       <section className="jf-hero">
         <HeroBackground />
         <div className="jf-hero-content">
-          <div className="jf-hero-tag">John Fraser Secondary School</div>
           <div className="jf-hero-big">
             ERR<span className="jf-yr">OR</span>
           </div>

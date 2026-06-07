@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Terms of Service — Class of 2026",
   description:
-    "Rules for using Fraser Grads '26 — the unofficial John Fraser SS Class of 2026 site.",
+    "Rules for using Fraser Grads '26 — the unofficial Fraser Class of 2026 site.",
 };
 
 export default function TermsPage() {
