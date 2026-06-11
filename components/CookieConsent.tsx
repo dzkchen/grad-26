@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "jf-cookie-consent-v1";
+const CONSENT_EVENT = "jf-cookie-consent-change";
 
 type Choice = "accepted" | "essential";
 
@@ -17,20 +18,37 @@ function readStoredChoice(): Choice | null {
   }
 }
 
-export function CookieConsent() {
-  const [open, setOpen] = useState(false);
+function subscribeToConsentChanges(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(CONSENT_EVENT, onChange);
 
-  useEffect(() => {
-    if (readStoredChoice() === null) setOpen(true);
-  }, []);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(CONSENT_EVENT, onChange);
+  };
+}
+
+function readServerChoice(): Choice {
+  return "essential";
+}
+
+export function CookieConsent() {
+  const storedChoice = useSyncExternalStore(
+    subscribeToConsentChanges,
+    readStoredChoice,
+    readServerChoice,
+  );
+  const [dismissed, setDismissed] = useState(false);
+  const open = !dismissed && storedChoice === null;
 
   function record(choice: Choice) {
     try {
       window.localStorage.setItem(STORAGE_KEY, choice);
+      window.dispatchEvent(new Event(CONSENT_EVENT));
     } catch {
 
     }
-    setOpen(false);
+    setDismissed(true);
   }
 
   if (!open) return null;

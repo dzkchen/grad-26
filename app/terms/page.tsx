@@ -76,7 +76,7 @@ export default function TermsPage() {
           <h2>No promises btw</h2>
           <p>
             The site is a side
-            project, so it may go down, lose features, or have bugs. I'm going to try my best to keep this up and running.
+            project, so it may go down, lose features, or have bugs. I&apos;m going to try my best to keep this up and running.
           </p>
 
           <h2>Liability</h2>
