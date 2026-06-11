@@ -14,6 +14,7 @@ import (
 	"github.com/dzkchen/grad-26/api/internal/db"
 	"github.com/dzkchen/grad-26/api/internal/handlers"
 	"github.com/dzkchen/grad-26/api/internal/r2"
+	"github.com/dzkchen/grad-26/api/internal/ratelimit"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -59,6 +60,10 @@ func main() {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recoverer)
+	limiter := ratelimit.New()
+	// Cheap per-instance guard before HMAC verification so bad auth cannot
+	// force body reads and signature checks without any backpressure.
+	r.Use(limiter.IPMiddleware("pre-auth", ratelimit.Config{Limit: 600, Window: time.Minute}))
 	r.Use(auth.Verify(secret, map[string]bool{"/health": true}))
 
 	publicHost := os.Getenv("R2_PUBLIC_HOSTNAME")
@@ -68,14 +73,21 @@ func main() {
 
 	r.Get("/health", handlers.Health)
 	r.Get("/me/survey", handlers.MeSurvey(dbpool))
-	r.Get("/directory", handlers.Directory(dbpool, publicHost))
-	r.Get("/stats/aggregates", handlers.StatsAggregates(dbpool))
-	r.Post("/upload/url", handlers.UploadURL(r2Client))
-	r.Post("/survey", handlers.CreateSurvey(dbpool, r2Client))
+	r.With(limiter.Middleware("directory", ratelimit.Config{Limit: 240, Window: time.Minute})).
+		Get("/directory", handlers.Directory(dbpool, publicHost))
+	r.With(limiter.Middleware("stats-aggregates", ratelimit.Config{Limit: 60, Window: time.Minute})).
+		Get("/stats/aggregates", handlers.StatsAggregates(dbpool))
+	r.With(limiter.Middleware("upload-url", ratelimit.Config{Limit: 8, Window: time.Minute})).
+		Post("/upload/url", handlers.UploadURL(r2Client))
+	r.With(limiter.Middleware("survey", ratelimit.Config{Limit: 5, Window: 10 * time.Minute})).
+		Post("/survey", handlers.CreateSurvey(dbpool, r2Client))
 	r.Get("/admin/surveys", handlers.AdminListSurveys(dbpool, publicHost, isAdmin))
-	r.Post("/admin/surveys/{id}/approve", handlers.AdminApproveSurvey(dbpool, isAdmin))
-	r.Post("/admin/surveys/{id}/unapprove", handlers.AdminUnapproveSurvey(dbpool, isAdmin))
-	r.Delete("/admin/surveys/{id}", handlers.AdminDeleteSurvey(dbpool, r2Client, isAdmin))
+	r.With(limiter.Middleware("admin-mutation", ratelimit.Config{Limit: 60, Window: time.Minute})).
+		Post("/admin/surveys/{id}/approve", handlers.AdminApproveSurvey(dbpool, isAdmin))
+	r.With(limiter.Middleware("admin-mutation", ratelimit.Config{Limit: 60, Window: time.Minute})).
+		Post("/admin/surveys/{id}/unapprove", handlers.AdminUnapproveSurvey(dbpool, isAdmin))
+	r.With(limiter.Middleware("admin-mutation", ratelimit.Config{Limit: 60, Window: time.Minute})).
+		Delete("/admin/surveys/{id}", handlers.AdminDeleteSurvey(dbpool, r2Client, isAdmin))
 
 	srv := &http.Server{
 		Addr:              ":" + port,

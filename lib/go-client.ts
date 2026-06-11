@@ -48,6 +48,8 @@ export function sanitizeGoErrorMessage(code: string, status: number): string {
       return "This survey has already been submitted.";
     case "not_found":
       return "The requested item was not found.";
+    case "rate_limited":
+      return "Too many requests. Try again shortly.";
     case "invalid_response":
     case "non_json_response":
       return "The API returned an invalid response. Try again shortly.";

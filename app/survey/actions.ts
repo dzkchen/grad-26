@@ -9,6 +9,7 @@ import {
   GoApiError,
   toPublicMessage,
 } from "@/lib/go-client";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { SurveyFormSchema } from "@/lib/schemas";
 import type { z } from "zod";
 
@@ -18,6 +19,7 @@ export type SubmitSurveyState = {
 } | null;
 
 const SurveyPreflightSchema = SurveyFormSchema.omit({ photo_key: true });
+const SUBMIT_SURVEY_LIMIT = { limit: 3, windowMs: 10 * 60_000 };
 
 function formDataToSurveyInput(formData: FormData) {
   const answers: Record<string, FormDataEntryValue | string[]> = {};
@@ -85,6 +87,11 @@ export async function submitSurvey(
 
   if (!parsed.success) {
     return validationErrorState(parsed.error);
+  }
+
+  const rateLimit = checkRateLimit("submit-survey", user.email, SUBMIT_SURVEY_LIMIT);
+  if (!rateLimit.allowed) {
+    return { error: "Too many attempts. Try again shortly." };
   }
 
   try {

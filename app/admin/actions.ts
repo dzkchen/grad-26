@@ -8,15 +8,22 @@ import {
   GoApiError,
   toPublicMessage,
 } from "@/lib/go-client";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export type AdminSurveyActionResult =
   | { ok: true }
   | { ok: false; error: string };
 
+const ADMIN_MUTATION_LIMIT = { limit: 30, windowMs: 60_000 };
+
 async function runAdminSurveyMutation(
   mutate: (adminEmail: string) => Promise<void>,
 ): Promise<AdminSurveyActionResult> {
   const admin = await requireAdmin();
+  const rateLimit = checkRateLimit("admin-survey-mutation", admin.email, ADMIN_MUTATION_LIMIT);
+  if (!rateLimit.allowed) {
+    return { ok: false, error: "Too many admin actions. Try again shortly." };
+  }
 
   try {
     await mutate(admin.email);

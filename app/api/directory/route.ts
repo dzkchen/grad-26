@@ -1,7 +1,30 @@
 import { getDirectoryPage } from "@/lib/data/directory";
 import { GoApiConnectionError, GoApiError, toPublicMessage } from "@/lib/go-client";
+import { checkRateLimit, clientIpFromHeaders } from "@/lib/rate-limit";
+
+const DIRECTORY_LIMIT = { limit: 60, windowMs: 60_000 };
 
 export async function GET(request: Request) {
+  const rateLimit = checkRateLimit(
+    "directory",
+    clientIpFromHeaders(request.headers),
+    DIRECTORY_LIMIT,
+  );
+  if (!rateLimit.allowed) {
+    return Response.json(
+      {
+        error: {
+          code: "rate_limited",
+          message: "Too many requests. Try again shortly.",
+        },
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+      },
+    );
+  }
+
   const cursor = new URL(request.url).searchParams.get("cursor") ?? undefined;
 
   try {
