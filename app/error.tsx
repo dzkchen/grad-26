@@ -12,7 +12,14 @@ export default function ErrorPage({
   unstable_retry: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
+    const summary = error.digest
+      ? `${error.message} (digest: ${error.digest})`
+      : error.message;
+
+    console.error(`App route error: ${summary}`);
+    if (typeof error.stack === "string" && error.stack.length > 0) {
+      console.error(error.stack);
+    }
   }, [error]);
 
   return (

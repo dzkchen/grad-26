@@ -12,6 +12,7 @@ import {
 } from "react";
 import colleges from "@/content/colleges.json";
 import collegePrograms from "@/content/collegeprograms.json";
+import courseCodes from "@/content/coursecodes.json";
 import { QUESTIONS, type Question } from "@/content/survey-questions";
 import universities from "@/content/universities.json";
 import universityPrograms from "@/content/universityprograms.json";
@@ -126,6 +127,50 @@ async function uploadPhotoOnSubmit(file: File) {
   return signed.key;
 }
 
+function DatalistShortTextInput({
+  question,
+  name,
+  error,
+  defaultValue,
+  listId,
+  values,
+}: {
+  question: Extract<Question, { type: "short_text" }>;
+  name: string;
+  error?: string;
+  defaultValue?: string;
+  listId: string;
+  values: readonly string[];
+}) {
+  const id = `answer-${question.id}`;
+
+  return (
+    <div className="jf-survey-field">
+      <label htmlFor={id}>{question.label}</label>
+      <input
+        id={id}
+        name={name}
+        type="text"
+        list={listId}
+        maxLength={question.maxLength}
+        defaultValue={defaultValue}
+        aria-invalid={error ? "true" : undefined}
+        aria-describedby={error ? `${id}-error` : undefined}
+      />
+      <datalist id={listId}>
+        {values.map((value) => (
+          <option key={value} value={value} />
+        ))}
+      </datalist>
+      {error ? (
+        <p id={`${id}-error`} className="jf-survey-error">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function SchoolWorkplaceInput({
   question,
   name,
@@ -139,7 +184,6 @@ function SchoolWorkplaceInput({
   whatsNext: string;
   defaultValue?: string;
 }) {
-  const id = `answer-${question.id}`;
   const list =
     whatsNext === UNIVERSITY_CHOICE
       ? { id: "universities-list", values: universities }
@@ -159,29 +203,14 @@ function SchoolWorkplaceInput({
   }
 
   return (
-    <div className="jf-survey-field">
-      <label htmlFor={id}>{question.label}</label>
-      <input
-        id={id}
-        name={name}
-        type="text"
-        list={list.id}
-        maxLength={question.maxLength}
-        defaultValue={defaultValue}
-        aria-invalid={error ? "true" : undefined}
-        aria-describedby={error ? `${id}-error` : undefined}
-      />
-      <datalist id={list.id}>
-        {list.values.map((value) => (
-          <option key={value} value={value} />
-        ))}
-      </datalist>
-      {error ? (
-        <p id={`${id}-error`} className="jf-survey-error">
-          {error}
-        </p>
-      ) : null}
-    </div>
+    <DatalistShortTextInput
+      question={question}
+      name={name}
+      error={error}
+      defaultValue={defaultValue}
+      listId={list.id}
+      values={list.values}
+    />
   );
 }
 
@@ -198,7 +227,6 @@ function ProgramMajorInput({
   whatsNext: string;
   defaultValue?: string;
 }) {
-  const id = `answer-${question.id}`;
   const list =
     whatsNext === UNIVERSITY_CHOICE
       ? { id: "university-programs-list", values: universityPrograms }
@@ -218,29 +246,14 @@ function ProgramMajorInput({
   }
 
   return (
-    <div className="jf-survey-field">
-      <label htmlFor={id}>{question.label}</label>
-      <input
-        id={id}
-        name={name}
-        type="text"
-        list={list.id}
-        maxLength={question.maxLength}
-        defaultValue={defaultValue}
-        aria-invalid={error ? "true" : undefined}
-        aria-describedby={error ? `${id}-error` : undefined}
-      />
-      <datalist id={list.id}>
-        {list.values.map((value) => (
-          <option key={value} value={value} />
-        ))}
-      </datalist>
-      {error ? (
-        <p id={`${id}-error`} className="jf-survey-error">
-          {error}
-        </p>
-      ) : null}
-    </div>
+    <DatalistShortTextInput
+      question={question}
+      name={name}
+      error={error}
+      defaultValue={defaultValue}
+      listId={list.id}
+      values={list.values}
+    />
   );
 }
 
@@ -315,6 +328,23 @@ function QuestionInput({
         error={error}
         whatsNext={whatsNext}
         defaultValue={defaultValue}
+      />
+    );
+  }
+
+  if (
+    (question.id === "top_courses" || question.id === "hardest_course") &&
+    question.type === "short_text"
+  ) {
+    return (
+      <DatalistShortTextInput
+        key={fieldKey}
+        question={question}
+        name={name}
+        error={error}
+        defaultValue={defaultValue}
+        listId={`course-codes-list-${question.id}`}
+        values={courseCodes}
       />
     );
   }
