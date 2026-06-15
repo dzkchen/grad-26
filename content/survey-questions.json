@@ -45,8 +45,18 @@
     "label": "Are you in a specialized program?",
     "choices": ["No", "AP", "SHSM"]
   },
-  { "id": "top_courses", "type": "short_text", "label": "Favourite course", "maxLength": 200 },
-  { "id": "hardest_course", "type": "short_text", "label": "Most difficult course", "maxLength": 100 },
+  { 
+    "id": "top_courses", 
+    "type": "short_text", 
+    "label": "Favourite course", 
+    "choices": ["ATC4M", "ATC4E", "ADA4M", "ADA4E", "AEA4O", "ASM4M", "ASM4E", "AMU4M", "AMU4E", "AVI4M", "AVI4E", "BAT4M", "BAN4E", "BDV4C", "BTX4C", "BTX4E", "BBB4M", "BBB4E", "BOH4M", "BOG4E", "CIA4U", "CIC4E", "CGW4U", "CGW4C", "CGU4M", "CGO4M", "CGR4M", "CGR4E", "CHI4U", "CHY4U", "CHY4C", "CHM4E", "CLN4U", "CLN4C", "CPW4U", "LVV4U", "LBADU–LDYDU", "LBADO–LDYDO", "ICS4U", "ICS4C", "ENG4U", "ENG4C", "ENG4E", "ETS4U", "EWC4U", "ETS4C", "EWC4C", "EBT4O", "OLC4O", "NDW4M", "NDG4M", "FSF4U", "FSF4O", "FEF4U", "FIF4U", "FIF4O", "GLS4O", "GLE4O", "GLN4O", "PPL4O", "PSK4U", "PLF4M", "IDC4U", "IDP4U", "IDC4O", "IDP4O", "MHF4U", "MCV4U", "MDM4U", "MCT4C", "MAP4C", "MEL4E", "SNC4M", "SNC4E", "SBI4U", "SCH4U", "SCH4C", "SES4U", "SPH4U", "SPH4C", "HSE4M", "HSC4M", "HNB4M", "HFA4U", "HFA4C", "HFL4E", "HHS4U", "HHS4C", "HHG4M", "HIP4O", "HPD4C", "HSB4U", "HZT4U", "TGJ4M", "TGJ4O", "TEJ4M", "TEJ4E", "TCJ4C", "TCJ4E", "TWJ4E"]
+  },
+  {
+    "id": "hardest_course", 
+    "type": "single_choice", 
+    "label": "Most difficult course", 
+    "choices": ["ATC4M", "ATC4E", "ADA4M", "ADA4E", "AEA4O", "ASM4M", "ASM4E", "AMU4M", "AMU4E", "AVI4M", "AVI4E", "BAT4M", "BAN4E", "BDV4C", "BTX4C", "BTX4E", "BBB4M", "BBB4E", "BOH4M", "BOG4E", "CIA4U", "CIC4E", "CGW4U", "CGW4C", "CGU4M", "CGO4M", "CGR4M", "CGR4E", "CHI4U", "CHY4U", "CHY4C", "CHM4E", "CLN4U", "CLN4C", "CPW4U", "LVV4U", "LBADU–LDYDU", "LBADO–LDYDO", "ICS4U", "ICS4C", "ENG4U", "ENG4C", "ENG4E", "ETS4U", "EWC4U", "ETS4C", "EWC4C", "EBT4O", "OLC4O", "NDW4M", "NDG4M", "FSF4U", "FSF4O", "FEF4U", "FIF4U", "FIF4O", "GLS4O", "GLE4O", "GLN4O", "PPL4O", "PSK4U", "PLF4M", "IDC4U", "IDP4U", "IDC4O", "IDP4O", "MHF4U", "MCV4U", "MDM4U", "MCT4C", "MAP4C", "MEL4E", "SNC4M", "SNC4E", "SBI4U", "SCH4U", "SCH4C", "SES4U", "SPH4U", "SPH4C", "HSE4M", "HSC4M", "HNB4M", "HFA4U", "HFA4C", "HFL4E", "HHS4U", "HHS4C", "HHG4M", "HIP4O", "HPD4C", "HSB4U", "HZT4U", "TGJ4M", "TGJ4O", "TEJ4M", "TEJ4E", "TCJ4C", "TCJ4E", "TWJ4E"]
+  },
   {
     "id": "final_grade_bucket",
     "type": "single_choice",
