@@ -171,6 +171,49 @@ function DatalistShortTextInput({
   );
 }
 
+function SelectShortTextInput({
+  question,
+  name,
+  error,
+  defaultValue,
+  options,
+  placeholder,
+}: {
+  question: Extract<Question, { type: "short_text" }>;
+  name: string;
+  error?: string;
+  defaultValue?: string;
+  options: readonly string[];
+  placeholder: string;
+}) {
+  const id = `answer-${question.id}`;
+
+  return (
+    <div className="jf-survey-field">
+      <label htmlFor={id}>{question.label}</label>
+      <select
+        id={id}
+        name={name}
+        defaultValue={defaultValue ?? ""}
+        aria-invalid={error ? "true" : undefined}
+        aria-describedby={error ? `${id}-error` : undefined}
+      >
+        <option value="">{placeholder}</option>
+        {options.map((value) => (
+          <option key={value} value={value}>
+            {value}
+          </option>
+        ))}
+      </select>
+      {error ? (
+        <p id={`${id}-error`} className="jf-survey-error">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function SchoolWorkplaceInput({
   question,
   name,
@@ -337,14 +380,14 @@ function QuestionInput({
     question.type === "short_text"
   ) {
     return (
-      <DatalistShortTextInput
+      <SelectShortTextInput
         key={fieldKey}
         question={question}
         name={name}
         error={error}
         defaultValue={defaultValue}
-        listId={`course-codes-list-${question.id}`}
-        values={courseCodes}
+        options={courseCodes}
+        placeholder="Select a course"
       />
     );
   }
