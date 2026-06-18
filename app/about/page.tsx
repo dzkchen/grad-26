@@ -55,7 +55,7 @@ export default function AboutPage() {
             <div className={styles.photo}>
               <Image
                 src="/about/me.jpg"
-                alt="David Chen, creator of Fraser Grads '26"
+                alt="David Chen"
                 fill
                 sizes="(max-width: 900px) calc(100vw - 80px), 300px"
                 preload
@@ -70,7 +70,7 @@ export default function AboutPage() {
           <div className={styles.premisePanel}>
             <div className={styles.premiseCopy}>
               <p>
-                Fraser Grads &apos;26 is an unofficial, side project for me to learn something that is actually useful.
+                Fraser Grads &apos;26 is an unofficial site for our grad class.
               </p>
               <p>
                 The goal is to help us look back on high school after
@@ -83,7 +83,10 @@ export default function AboutPage() {
               </p>
               <p>
                 Special thanks to Arjita and Inesh for helping make the survey
-                questions.
+                questions. Also to Yang for helping with some survey design thingy.
+              </p>
+              <p>
+                If you would like to take down your survey or change information, contact me via ig or email!
               </p>
             </div>
           </div>
