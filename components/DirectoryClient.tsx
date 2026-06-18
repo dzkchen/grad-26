@@ -79,6 +79,8 @@ export function DirectoryClient({
   const [displayedEntry, setDisplayedEntry] = useState<DirectoryEntry | null>(
     null,
   );
+  const [photoExpanded, setPhotoExpanded] = useState(false);
+  const [photoTilt, setPhotoTilt] = useState("-3deg");
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const taggedEntries = useMemo(
@@ -128,6 +130,7 @@ export function DirectoryClient({
   }, []);
 
   const closeModal = useCallback(() => {
+    setPhotoExpanded(false);
     setActiveEntry(null);
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
     closeTimerRef.current = setTimeout(() => {
@@ -138,11 +141,13 @@ export function DirectoryClient({
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") closeModal();
+      if (e.key !== "Escape") return;
+      if (photoExpanded) setPhotoExpanded(false);
+      else closeModal();
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [closeModal]);
+  }, [closeModal, photoExpanded]);
 
   useEffect(() => {
     if (!activeEntry) return;
@@ -325,14 +330,64 @@ export function DirectoryClient({
           >
             ✕
           </button>
-          {entryForModal ? <ModalBody entry={entryForModal} /> : null}
+          {entryForModal ? (
+            <ModalBody
+              entry={entryForModal}
+              onExpand={() => {
+                setPhotoTilt(Math.random() < 0.5 ? "-3deg" : "3deg");
+                setPhotoExpanded(true);
+              }}
+            />
+          ) : null}
         </div>
+      </div>
+
+      <div
+        role="presentation"
+        onClick={() => setPhotoExpanded(false)}
+        aria-hidden={!photoExpanded}
+        className={
+          photoExpanded
+            ? "fixed inset-0 z-[300] flex cursor-zoom-out items-center justify-center bg-[rgba(13,27,75,0.8)] p-6 opacity-100 backdrop-blur-[8px] transition-opacity duration-300 ease-out"
+            : "pointer-events-none fixed inset-0 z-[300] flex cursor-zoom-out items-center justify-center bg-[rgba(13,27,75,0.8)] p-6 opacity-0 backdrop-blur-[8px] transition-opacity duration-300 ease-out"
+        }
+      >
+        {entryForModal ? (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${entryForModal.display_name} photo`}
+            style={{
+              transform: `rotate(${photoTilt}) scale(${photoExpanded ? 1 : 0.9})`,
+            }}
+            className="max-h-[90vh] w-[min(86vw,440px)] bg-white p-3 pb-10 shadow-[0_24px_64px_rgba(13,27,75,0.4)] transition-transform duration-300 ease-[cubic-bezier(.34,1.2,.64,1)]"
+          >
+            <div className="relative aspect-square w-full overflow-hidden bg-[var(--jf-paper-dark)]">
+              <Image
+                src={entryForModal.photo_url}
+                alt={`${entryForModal.display_name} photo`}
+                fill
+                sizes="440px"
+                className="object-cover"
+              />
+            </div>
+            <div className="mt-3 text-center text-[18px] font-medium text-[var(--jf-ink)]">
+              {entryForModal.display_name.split(" ")[0]}
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
 }
 
-function ModalBody({ entry }: { entry: DirectoryEntry }) {
+function ModalBody({
+  entry,
+  onExpand,
+}: {
+  entry: DirectoryEntry;
+  onExpand: () => void;
+}) {
   const instagram = entry.socials?.instagram;
   const linkedin = entry.socials?.linkedin;
   const d = entry.details ?? {};
@@ -342,9 +397,11 @@ function ModalBody({ entry }: { entry: DirectoryEntry }) {
   return (
     <div className="px-6 pt-6 pb-10 md:px-8">
       <div className="mb-7 flex flex-col items-start gap-6 sm:flex-row">
-        <div
-          className="w-[140px] shrink-0 bg-white p-2 pb-6 shadow-[0_6px_24px_rgba(13,27,75,0.15)]"
-          style={{ transform: "rotate(-2deg)" }}
+        <button
+          type="button"
+          onClick={onExpand}
+          aria-label={`Enlarge ${entry.display_name}'s photo`}
+          className="w-[140px] shrink-0 cursor-zoom-in bg-white p-2 pb-6 shadow-[0_6px_24px_rgba(13,27,75,0.15)] transition-transform duration-[250ms] ease-[cubic-bezier(.34,1.56,.64,1)] [transform:rotate(-2deg)] hover:[transform:rotate(0deg)_scale(1.04)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--jf-blue)]"
         >
           <div className="relative aspect-square w-full overflow-hidden bg-[var(--jf-paper-dark)]">
             <Image
@@ -358,7 +415,7 @@ function ModalBody({ entry }: { entry: DirectoryEntry }) {
           <div className="mt-1 text-center text-[13px] font-medium text-[var(--jf-ink)]">
             {entry.display_name.split(" ")[0]}
           </div>
-        </div>
+        </button>
         <div className="min-w-0 flex-1">
           <h2
             id="directory-modal-title"
