@@ -240,9 +240,7 @@ export function DirectoryClient({
           <div className="grid gap-x-4 gap-y-6 [grid-template-columns:repeat(auto-fill,minmax(160px,1fr))]">
             {filtered.map(({ entry }, i) => {
               const rot = ROTATIONS[i % ROTATIONS.length];
-              const destSnippet = entry.details?.whats_next
-                ? entry.details.whats_next.split(" ").slice(0, 3).join(" ")
-                : "";
+              const destSnippet = entry.details?.school_workplace?.trim() ?? "";
               return (
                 <button
                   key={entry.id}
