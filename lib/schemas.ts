@@ -1,4 +1,5 @@
 import { z } from "zod";
+import courseCodes from "@/content/coursecodes.json";
 import { QUESTIONS, type Question } from "@/content/survey-questions";
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
@@ -60,6 +61,17 @@ function questionSchema(question: Question): z.ZodTypeAny {
     case "short_text":
     case "long_text": {
       const maxLength = question.maxLength ?? 1000;
+      if (
+        question.type === "short_text" &&
+        (question.id === "top_courses" || question.id === "hardest_course")
+      ) {
+        return z
+          .string({ error: `${question.label} must be text.` })
+          .trim()
+          .refine((value) => courseCodes.includes(value), {
+            error: `${question.label} must be one of the listed course options.`,
+          });
+      }
       return z
         .string({ error: `${question.label} must be text.` })
         .trim()
