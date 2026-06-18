@@ -45,9 +45,6 @@ export default function Home() {
 
       <section className="jf-scattered">
         <p className="jf-scattered-label">What&apos;s inside</p>
-        <h2 className="jf-scattered-heading">
-
-        </h2>
 
         <div className="jf-cards">
           <Link href="/directory" className="jf-card jf-card-directory">
